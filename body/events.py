@@ -46,7 +46,8 @@ class Events:
         if self.cross_cmd_enabled and command == "cross":
             self.keyboard_enabled = not self.keyboard_enabled
             self.release_previous_key()
-            self.release_previous_key()
+            self.release_walk_previous_key()
+            self.release_face_previous_key()
 
     # Clear log commands
     def limit_commands(self):

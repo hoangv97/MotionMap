@@ -27,7 +27,7 @@ mp_config = dict(
 
 # Config for body processor
 body_config = dict(
-    draw_angles=True,  # Show calculated angles on camera
+    draw_angles=False,  # Show calculated angles on camera
     show_coords=False,  # Show body coordinates
 )
 
