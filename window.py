@@ -43,9 +43,10 @@ controls_list = [
         mappings=dict(
             cross="",
             left_swing="a",
-            left_swing_hold="w",
+            left_swing_hold="q",
             right_swing="d",
             right_swing_hold="s",
+            hold_hands="w",
             face_tilt_left="j",
             face_tilt_right="l",
             walk=Key.up,
@@ -109,6 +110,7 @@ controls_list = [
             left_swing_hold="w",
             right_swing="d",
             right_swing_hold="s",
+            hold_hands="n",
             face_tilt_left="j",
             face_tilt_right="l",
             walk="t",
@@ -116,7 +118,6 @@ controls_list = [
             right_walk="h",
             down_walk="g",
             squat="b",
-            hold_hands="n",
         ),
     ),
 ]
