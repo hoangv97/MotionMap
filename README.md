@@ -46,7 +46,13 @@ In `window.py` edit these objects:
   - Left + hold: swing left hand with right hand up
   - Right
   - Right + hold
-- Hands crossed: Cross 2 hands in Wakanda style
+- Hands crossed: Cross 2 hands in Wakanda style (if cross cmd mod is enabled, you can use this to toggle keyboard event)
+- Hold hands: Hold 2 hands or clap to enable
+
+#### Driving mode
+
+- Move 2 hands close to enable steering wheel, tilt left or right to control
+- Move 2 hands inside the green box to enable driving up control
 
 ### Legs
 

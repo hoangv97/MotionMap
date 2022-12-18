@@ -21,13 +21,6 @@ mp_pose = mp.solutions.pose
 
 
 class BodyState:
-
-    arms = ArmsState()
-    legs = LegsState()
-    face = FaceState()
-
-    log = ""
-
     def __init__(self, body_config, events_config):
         self.draw_angles = body_config["draw_angles"]
         self.show_coords = body_config["show_coords"]
@@ -35,6 +28,12 @@ class BodyState:
         self.events = Events(**events_config)
 
         self.mode = None
+
+        self.arms = ArmsState()
+        self.legs = LegsState()
+        self.face = FaceState()
+
+        self.log = ""
 
     def __setitem__(self, key, value):
         setattr(self, key, value)

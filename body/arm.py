@@ -12,16 +12,17 @@ from .const import IMAGE_HEIGHT, IMAGE_WIDTH, DRIVING_UP_AREA
 
 
 class ArmState:
-    straight = None
-    curl = None
-    up = None
-    front = None
-    raised = None
 
     CURL_MAX_ANGLE = 45
 
     def __init__(self, side):
         self.side = side
+
+        self.straight = None
+        self.curl = None
+        self.up = None
+        self.front = None
+        self.raised = None
 
     @property
     def is_left(self):
@@ -58,21 +59,20 @@ class ArmState:
 
 class ArmsState:
 
-    left = ArmState("left")
-    right = ArmState("right")
-
-    crossed = None
-    left_swing = None
-    right_swing = None
-    hold_hands = None
-
     ELBOW_CROSS_MAX_ANGLE = 60
 
-    driving_hands = None
     DRIVING_SLOPE_ANGLE = 25
 
     def __init__(self):
-        pass
+        self.left = ArmState("left")
+        self.right = ArmState("right")
+
+        self.crossed = None
+        self.left_swing = None
+        self.right_swing = None
+        self.hold_hands = None
+
+        self.driving_hands = None
 
     def update(
         self,
@@ -159,12 +159,12 @@ class ArmsState:
                     ],
                     **DRIVING_UP_AREA,
                 ):
-                    events.add("driving_up")
+                    events.add("d2_driving_up")
 
                 if left_right_hands_slope > self.DRIVING_SLOPE_ANGLE:
-                    events.add("walk_driving_left")
+                    events.add("d1_driving_left")
                 elif left_right_hands_slope < -self.DRIVING_SLOPE_ANGLE:
-                    events.add("walk_driving_right")
+                    events.add("d1_driving_right")
             else:
                 self.driving_hands = False
 

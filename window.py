@@ -92,13 +92,13 @@ controls_list = [
     dict(
         name="Euro Truck",
         mappings=dict(
-            driving_up=Key.up,
-            walk_driving_left=Key.left,
-            walk_driving_right=Key.right,
+            d2_driving_up=Key.up,
+            d1_driving_left=Key.left,
+            d1_driving_right=Key.right,
         ),
         events_config=dict(
             pressing_timer_interval=0.3,
-            walk_pressing_timer_interval=0.05,
+            d1_pressing_timer_interval=0.05,
         ),
     ),
     dict(
@@ -125,8 +125,8 @@ events_config = dict(
     keyboard_enabled=False,  # toggle keyboard events
     cross_cmd_enabled=True,  # toggle cross command (used for toggling keyboard events)
     pressing_timer_interval=0.3,  # key pressed interval
-    walk_pressing_timer_interval=1.0,  # key pressed interval for walking commands
-    face_pressing_timer_interval=0.1,  # key pressed interval for face tilt commands
+    d1_pressing_timer_interval=1.0,  # key pressed interval for walking commands
+    d2_pressing_timer_interval=0.1,  # key pressed interval for face tilt commands
     command_key_mappings=controls_list[0]["mappings"],
 )
 
