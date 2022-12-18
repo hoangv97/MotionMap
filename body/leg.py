@@ -78,20 +78,22 @@ class LegsState:
             else:
                 self.squat = False
 
-            if not self.squat:
-                if left_knee_angle < self.KNEE_UP_MAX_ANGLE:
-                    if not self.left_up_state:
-                        self.left_up_state = True
-                        self.steps += 1
-                else:
-                    self.left_up_state = False
+            if self.squat:
+                return
 
-                if right_knee_angle < self.KNEE_UP_MAX_ANGLE:
-                    if not self.right_up_state:
-                        self.right_up_state = True
-                        self.steps += 1
-                else:
-                    self.right_up_state = False
+            if left_knee_angle < self.KNEE_UP_MAX_ANGLE:
+                if not self.left_up_state:
+                    self.left_up_state = True
+                    self.steps += 1
+            else:
+                self.left_up_state = False
+
+            if right_knee_angle < self.KNEE_UP_MAX_ANGLE:
+                if not self.right_up_state:
+                    self.right_up_state = True
+                    self.steps += 1
+            else:
+                self.right_up_state = False
 
     def __str__(self):
         return f"steps: {self.steps}"

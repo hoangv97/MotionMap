@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
 )
 from pynput.keyboard import Key
 from cv2_thread import Cv2Thread
+from body.const import IMAGE_HEIGHT, IMAGE_WIDTH
 
 # Config for mediapipe pose solution
 mp_config = dict(
@@ -25,13 +26,18 @@ mp_config = dict(
     enable_segmentation=True,
 )
 
+body_modes = [
+    "Normal",
+    "Driving",
+]
+
 # Config for body processor
 body_config = dict(
     draw_angles=False,  # Show calculated angles on camera
     show_coords=False,  # Show body coordinates
 )
 
-command_key_mappings_list = [
+controls_list = [
     dict(
         name="Zelda",
         mappings=dict(
@@ -67,13 +73,32 @@ command_key_mappings_list = [
         ),
     ),
     dict(
-        name="Running",
+        name="GoW",
         mappings=dict(
-            walk=Key.up,
-            left_walk=Key.left,
-            right_walk=Key.right,
-            down_walk=Key.down,
-            squat=Key.space,
+            cross="",
+            left_swing="z",
+            left_swing_hold="1",
+            right_swing="f",
+            right_swing_hold="2",
+            face_tilt_left=Key.left,
+            face_tilt_right=Key.right,
+            walk="w",
+            left_walk="a",
+            right_walk="d",
+            down_walk="s",
+            squat="e",
+        ),
+    ),
+    dict(
+        name="Euro Truck",
+        mappings=dict(
+            driving_up=Key.up,
+            walk_driving_left=Key.left,
+            walk_driving_right=Key.right,
+        ),
+        events_config=dict(
+            pressing_timer_interval=0.3,
+            walk_pressing_timer_interval=0.05,
         ),
     ),
     dict(
@@ -91,6 +116,7 @@ command_key_mappings_list = [
             right_walk="h",
             down_walk="g",
             squat="b",
+            hold_hands="n",
         ),
     ),
 ]
@@ -101,7 +127,7 @@ events_config = dict(
     pressing_timer_interval=0.3,  # key pressed interval
     walk_pressing_timer_interval=1.0,  # key pressed interval for walking commands
     face_pressing_timer_interval=0.1,  # key pressed interval for face tilt commands
-    command_key_mappings=command_key_mappings_list[0]["mappings"],
+    command_key_mappings=controls_list[0]["mappings"],
 )
 
 inputs = [
@@ -161,7 +187,7 @@ class Window(QMainWindow):
 
         # Create a label for the display camera
         self.camera_label = QLabel(self)
-        self.camera_label.setFixedSize(640, 480)
+        self.camera_label.setFixedSize(IMAGE_WIDTH, IMAGE_HEIGHT)
 
         log_layout = QVBoxLayout()
 
@@ -181,6 +207,7 @@ class Window(QMainWindow):
             elif "slider" in input_type:
                 self.add_slider(input, log_layout)
 
+        self.add_controls_mode_combobox(log_layout)
         self.add_controls_combobox(log_layout)
 
         # Add state label
@@ -288,22 +315,40 @@ class Window(QMainWindow):
     def add_controls_combobox(self, layout):
         controls_row = QFormLayout()
 
-        self.controls_combobox = QComboBox()
-        self.controls_combobox.setMaximumSize(150, 100)
-        self.controls_combobox.addItems(
-            list(map(lambda i: i["name"], command_key_mappings_list))
-        )
-        self.controls_combobox.currentIndexChanged.connect(
-            self.controls_combobox_change
-        )
+        controls_combobox = QComboBox()
+        controls_combobox.setMaximumSize(150, 100)
+        controls_combobox.addItems(list(map(lambda i: i["name"], controls_list)))
+        controls_combobox.currentIndexChanged.connect(self.controls_combobox_change)
 
-        controls_row.addRow("Control", self.controls_combobox)
+        controls_row.addRow("Control", controls_combobox)
         layout.addLayout(controls_row)
 
     def controls_combobox_change(self, index):
-        self.cv2_thread.body.events.command_key_mappings = command_key_mappings_list[
-            index
-        ]["mappings"]
+        self.cv2_thread.body.events.command_key_mappings = controls_list[index][
+            "mappings"
+        ]
+        new_events_config = events_config
+        if "events_config" in controls_list[index]:
+            new_events_config = controls_list[index]["events_config"]
+            print("new events config", new_events_config)
+        for k, v in new_events_config.items():
+            self.cv2_thread.body.events[k] = v
+
+    def add_controls_mode_combobox(self, layout):
+        controls_row = QFormLayout()
+
+        controls_mode_combobox = QComboBox()
+        controls_mode_combobox.setMaximumSize(150, 100)
+        controls_mode_combobox.addItems(body_modes)
+        controls_mode_combobox.currentIndexChanged.connect(
+            self.controls_mode_combobox_change
+        )
+
+        controls_row.addRow("Mode", controls_mode_combobox)
+        layout.addLayout(controls_row)
+
+    def controls_mode_combobox_change(self, index):
+        self.cv2_thread.body.mode = body_modes[index]
 
 
 if __name__ == "__main__":

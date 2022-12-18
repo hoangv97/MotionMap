@@ -1,5 +1,14 @@
+import cv2
 from .events import Events
-from .utils import compare_nums, in_range
+from .utils import (
+    compare_nums,
+    is_landmarks_closed,
+    calculate_slope,
+    calculate_distance,
+    in_range,
+    is_landmarks_in_rectangle,
+)
+from .const import IMAGE_HEIGHT, IMAGE_WIDTH, DRIVING_UP_AREA
 
 
 class ArmState:
@@ -19,7 +28,16 @@ class ArmState:
         return self.side == "left"
 
     def update(
-        self, events: Events, shoulder, elbow, wrist, shoulder_angle, elbow_angle
+        self,
+        events: Events,
+        shoulder,
+        elbow,
+        wrist,
+        pinky,
+        index,
+        thumb,
+        shoulder_angle,
+        elbow_angle,
     ):
         self.straight = elbow_angle > 160
         self.up = shoulder_angle > 45
@@ -46,14 +64,20 @@ class ArmsState:
     crossed = None
     left_swing = None
     right_swing = None
+    hold_hands = None
 
     ELBOW_CROSS_MAX_ANGLE = 60
+
+    driving_hands = None
+    DRIVING_SLOPE_ANGLE = 25
 
     def __init__(self):
         pass
 
     def update(
         self,
+        mode,
+        image,
         events: Events,
         nose,
         left_shoulder,
@@ -62,6 +86,12 @@ class ArmsState:
         right_elbow,
         left_wrist,
         right_wrist,
+        left_pinky,
+        right_pinky,
+        left_index,
+        right_index,
+        left_thumb,
+        right_thumb,
         left_shoulder_angle,
         right_shoulder_angle,
         left_elbow_angle,
@@ -72,6 +102,9 @@ class ArmsState:
             left_shoulder,
             left_elbow,
             left_wrist,
+            left_pinky,
+            left_index,
+            left_thumb,
             left_shoulder_angle,
             left_elbow_angle,
         )
@@ -80,9 +113,82 @@ class ArmsState:
             right_shoulder,
             right_elbow,
             right_wrist,
+            right_pinky,
+            right_index,
+            right_thumb,
             right_shoulder_angle,
             right_elbow_angle,
         )
+
+        left_right_hands_slope = calculate_slope(left_thumb, right_thumb)
+
+        if mode == "Driving":
+            if is_landmarks_closed(
+                [
+                    left_pinky,
+                    right_pinky,
+                    left_index,
+                    right_index,
+                    left_thumb,
+                    right_thumb,
+                ],
+                0.3,
+            ):
+                self.driving_hands = True
+
+                cv2.circle(
+                    image,
+                    (
+                        int((left_thumb[0] + right_thumb[0]) / 2 * IMAGE_WIDTH),
+                        int((left_thumb[1] + right_thumb[1]) / 2 * IMAGE_HEIGHT),
+                    ),
+                    50,
+                    (255, 0, 0),
+                    5,
+                )
+
+                # 2 hands are in driving up area
+                if is_landmarks_in_rectangle(
+                    [
+                        left_pinky,
+                        right_pinky,
+                        left_index,
+                        right_index,
+                        left_thumb,
+                        right_thumb,
+                    ],
+                    **DRIVING_UP_AREA,
+                ):
+                    events.add("driving_up")
+
+                if left_right_hands_slope > self.DRIVING_SLOPE_ANGLE:
+                    events.add("walk_driving_left")
+                elif left_right_hands_slope < -self.DRIVING_SLOPE_ANGLE:
+                    events.add("walk_driving_right")
+            else:
+                self.driving_hands = False
+
+            return
+
+        if left_right_hands_slope < 10 and is_landmarks_closed(
+            [
+                left_pinky,
+                right_pinky,
+                left_index,
+                right_index,
+                left_thumb,
+                right_thumb,
+            ],
+            0.1,
+        ):
+            if not self.hold_hands:
+                self.hold_hands = True
+                events.add("hold_hands")
+        else:
+            self.hold_hands = False
+
+        if self.hold_hands:
+            return
 
         if (
             compare_nums(left_wrist[0], right_wrist[0], "lt")
@@ -95,20 +201,22 @@ class ArmsState:
         else:
             self.crossed = False
 
-        if not self.crossed:
-            if compare_nums(left_wrist[0], nose[0], "lt"):
-                if not self.left_swing:
-                    self.left_swing = True
-                    events.add(f"left_swing{'_hold' if self.right.raised else ''}")
-            else:
-                self.left_swing = False
+        if self.crossed:
+            return
 
-            if compare_nums(right_wrist[0], nose[0], "gt"):
-                if not self.right_swing:
-                    self.right_swing = True
-                    events.add(f"right_swing{'_hold' if self.left.raised else ''}")
-            else:
-                self.right_swing = False
+        if compare_nums(left_wrist[0], nose[0], "lt"):
+            if not self.left_swing:
+                self.left_swing = True
+                events.add(f"left_swing{'_hold' if self.right.raised else ''}")
+        else:
+            self.left_swing = False
+
+        if compare_nums(right_wrist[0], nose[0], "gt"):
+            if not self.right_swing:
+                self.right_swing = True
+                events.add(f"right_swing{'_hold' if self.left.raised else ''}")
+        else:
+            self.right_swing = False
 
     def __str__(self):
         return f""

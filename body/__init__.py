@@ -13,6 +13,7 @@ from .arm import ArmsState
 from .leg import LegsState
 from .face import FaceState
 from .events import Events
+from .const import IMAGE_HEIGHT, IMAGE_WIDTH, DRIVING_UP_AREA
 
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
@@ -32,6 +33,8 @@ class BodyState:
         self.show_coords = body_config["show_coords"]
 
         self.events = Events(**events_config)
+
+        self.mode = None
 
     def __setitem__(self, key, value):
         setattr(self, key, value)
@@ -91,6 +94,27 @@ class BodyState:
                 pose_landmarks, mp_pose.PoseLandmark.RIGHT_WRIST
             )
 
+            left_pinky = get_landmark_coordinates(
+                pose_landmarks, mp_pose.PoseLandmark.LEFT_PINKY
+            )
+            right_pinky = get_landmark_coordinates(
+                pose_landmarks, mp_pose.PoseLandmark.RIGHT_PINKY
+            )
+
+            left_index = get_landmark_coordinates(
+                pose_landmarks, mp_pose.PoseLandmark.LEFT_INDEX
+            )
+            right_index = get_landmark_coordinates(
+                pose_landmarks, mp_pose.PoseLandmark.RIGHT_INDEX
+            )
+
+            left_thumb = get_landmark_coordinates(
+                pose_landmarks, mp_pose.PoseLandmark.LEFT_THUMB
+            )
+            right_thumb = get_landmark_coordinates(
+                pose_landmarks, mp_pose.PoseLandmark.RIGHT_THUMB
+            )
+
             left_hip = get_landmark_coordinates(
                 pose_landmarks, mp_pose.PoseLandmark.LEFT_HIP
             )
@@ -135,6 +159,8 @@ class BodyState:
             left_right_eyes_slope = calculate_slope(left_eye, right_eye)
 
             self.arms.update(
+                self.mode,
+                image,
                 self.events,
                 nose,
                 left_shoulder,
@@ -143,6 +169,12 @@ class BodyState:
                 right_elbow,
                 left_wrist,
                 right_wrist,
+                left_pinky,
+                right_pinky,
+                left_index,
+                right_index,
+                left_thumb,
+                right_thumb,
                 left_shoulder_angle,
                 right_shoulder_angle,
                 left_elbow_angle,
@@ -209,6 +241,18 @@ class BodyState:
                 (right_knee_angle, right_knee),
             )
 
+            if self.mode == "Driving":
+                cv2.rectangle(
+                    image,
+                    (DRIVING_UP_AREA["x"], DRIVING_UP_AREA["y"]),
+                    (
+                        DRIVING_UP_AREA["x"] + DRIVING_UP_AREA["width"],
+                        DRIVING_UP_AREA["y"] + DRIVING_UP_AREA["height"],
+                    ),
+                    (0, 255, 0),
+                    2,
+                )
+
             if self.draw_angles:
                 for (angle, landmark) in angles:
                     cv2.putText(
@@ -231,6 +275,9 @@ mouth_left:      {log_landmark(mouth_left)}            mouth_right:     {log_lan
 left_shoulder:   {log_landmark(left_shoulder)}         right_shoulder:  {log_landmark(right_shoulder)}
 left_elbow:      {log_landmark(left_elbow)}            right_elbow:     {log_landmark(right_elbow)}
 left_wrist:      {log_landmark(left_wrist)}            right_wrist:     {log_landmark(right_wrist)}
+left_pinky:      {log_landmark(left_pinky)}            right_pinky:     {log_landmark(right_pinky)}
+left_index:      {log_landmark(left_index)}            right_index:     {log_landmark(right_index)}
+left_thumb:      {log_landmark(left_thumb)}            right_thumb:     {log_landmark(right_thumb)}
 left_hip:        {log_landmark(left_hip)}              right_hip:       {log_landmark(right_hip)}
 left_knee:       {log_landmark(left_knee)}             right_knee:      {log_landmark(right_knee)}
 left_ankle:      {log_landmark(left_ankle)}            right_ankle:     {log_landmark(right_ankle)}

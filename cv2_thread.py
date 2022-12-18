@@ -6,6 +6,7 @@ from PySide6.QtCore import Qt, QThread, Signal
 from PySide6.QtGui import QImage
 import mediapipe as mp
 from body import BodyState
+from body.const import IMAGE_HEIGHT, IMAGE_WIDTH
 
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
@@ -91,7 +92,7 @@ class Cv2Thread(QThread):
                 # Creating and scaling QImage
                 h, w, ch = image.shape
                 image = QImage(image.data, w, h, ch * w, QImage.Format_RGB888)
-                image = image.scaled(640, 480, Qt.KeepAspectRatio)
+                image = image.scaled(IMAGE_WIDTH, IMAGE_HEIGHT, Qt.KeepAspectRatio)
 
                 # Emit signal
                 self.update_frame.emit(image)
