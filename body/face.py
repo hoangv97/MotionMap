@@ -3,13 +3,12 @@ from .utils import get_side_facing
 
 
 class FaceState:
-    tilt_direction = None
-    side_facing = None
 
     TILT_SLOPE_ANGLE = 35
 
     def __init__(self):
-        pass
+        self.tilt_direction = None
+        self.side_facing = None
 
     def update(
         self,

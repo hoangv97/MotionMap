@@ -1,5 +1,6 @@
 import numpy as np
 from typing import Literal
+from .const import IMAGE_WIDTH, IMAGE_HEIGHT
 
 
 def calculate_angle(a, b, c):
@@ -26,6 +27,15 @@ def calculate_slope(a, b):
     angle = angle * 180.0 / np.pi
 
     return angle
+
+
+def calculate_distance(a, b):
+    a = np.array(a)
+    b = np.array(b)
+
+    distance = np.linalg.norm(a - b)
+
+    return distance
 
 
 def vec_length(v: np.array):
@@ -115,6 +125,34 @@ def get_side_facing(elements):
         for angle in angles:
             if angle[0][0] <= angle_x <= angle[0][1]:
                 return angle[1]
+
+
+def is_landmarks_closed(landmarks: list, max_distance: float):
+    if len(landmarks) < 2:
+        return False
+    i = 0
+    while i < len(landmarks) - 1:
+        j = i + 1
+
+        l1 = landmarks[i]
+        l2 = landmarks[j]
+
+        if np.abs(l1[0] - l2[0]) > max_distance or np.abs(l1[1] - l2[1]) > max_distance:
+            return False
+
+        i += 1
+    return True
+
+
+def is_landmarks_in_rectangle(
+    landmarks: list, x: float, y: float, width: float, height: float
+):
+    for landmark in landmarks:
+        if not in_range(landmark[0] * IMAGE_WIDTH, x, x + width) or not in_range(
+            landmark[1] * IMAGE_HEIGHT, y, y + height
+        ):
+            return False
+    return True
 
 
 def compare_nums(

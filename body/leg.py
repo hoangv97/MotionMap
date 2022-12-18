@@ -2,10 +2,9 @@ from .events import Events
 
 
 class LegState:
-    straight = None
-
     def __init__(self, side):
         self.side = side
+        self.straight = None
 
     def update(self, events: Events, hip, knee, ankle, hip_angle, knee_angle):
         self.straight = knee_angle > 160
@@ -18,20 +17,18 @@ class LegState:
 
 class LegsState:
 
-    left = LegState("left")
-    right = LegState("right")
-
-    left_up_state = False
-    right_up_state = False
-    squat = False
-    steps = 0
-
     KNEE_UP_MAX_ANGLE = 155
 
     KNEE_MIN_VISIBILITY = 0.5
 
     def __init__(self):
-        pass
+        self.left = LegState("left")
+        self.right = LegState("right")
+
+        self.left_up_state = False
+        self.right_up_state = False
+        self.squat = False
+        self.steps = 0
 
     def update(
         self,
@@ -78,20 +75,22 @@ class LegsState:
             else:
                 self.squat = False
 
-            if not self.squat:
-                if left_knee_angle < self.KNEE_UP_MAX_ANGLE:
-                    if not self.left_up_state:
-                        self.left_up_state = True
-                        self.steps += 1
-                else:
-                    self.left_up_state = False
+            if self.squat:
+                return
 
-                if right_knee_angle < self.KNEE_UP_MAX_ANGLE:
-                    if not self.right_up_state:
-                        self.right_up_state = True
-                        self.steps += 1
-                else:
-                    self.right_up_state = False
+            if left_knee_angle < self.KNEE_UP_MAX_ANGLE:
+                if not self.left_up_state:
+                    self.left_up_state = True
+                    self.steps += 1
+            else:
+                self.left_up_state = False
+
+            if right_knee_angle < self.KNEE_UP_MAX_ANGLE:
+                if not self.right_up_state:
+                    self.right_up_state = True
+                    self.steps += 1
+            else:
+                self.right_up_state = False
 
     def __str__(self):
         return f"steps: {self.steps}"
