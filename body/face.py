@@ -12,6 +12,7 @@ class FaceState:
 
     def update(
         self,
+        mode: str,
         events: Events,
         nose,
         left_eye,
@@ -24,6 +25,9 @@ class FaceState:
         right_shoulder,
         left_right_eyes_slope,
     ):
+        if mode == "Driving":
+            return
+
         if left_right_eyes_slope > self.TILT_SLOPE_ANGLE:
             self.tilt_direction = "left"
             events.add("face_tilt_left")

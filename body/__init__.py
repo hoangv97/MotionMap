@@ -180,6 +180,7 @@ class BodyState:
                 right_elbow_angle,
             )
             self.legs.update(
+                self.mode,
                 self.events,
                 left_hip,
                 right_hip,
@@ -193,6 +194,7 @@ class BodyState:
                 right_knee_angle,
             )
             self.face.update(
+                self.mode,
                 self.events,
                 nose,
                 left_eye,
@@ -206,7 +208,11 @@ class BodyState:
                 left_right_eyes_slope,
             )
 
-            if self.legs.left_up_state or self.legs.right_up_state:
+            if (
+                self.mode not in ["Driving"]
+                and self.legs.left_up_state
+                or self.legs.right_up_state
+            ):
                 if (
                     self.arms.left.straight
                     and self.arms.left.up

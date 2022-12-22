@@ -76,7 +76,7 @@ class ArmsState:
 
     def update(
         self,
-        mode,
+        mode: str,
         image,
         events: Events,
         nose,
@@ -165,6 +165,8 @@ class ArmsState:
                     events.add("d1_driving_left")
                 elif left_right_hands_slope < -self.DRIVING_SLOPE_ANGLE:
                     events.add("d1_driving_right")
+                else:
+                    events.add("d1_driving_default")
             else:
                 self.driving_hands = False
 

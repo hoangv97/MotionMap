@@ -43,10 +43,9 @@ controls_list = [
         mappings=dict(
             cross="",
             left_swing="a",
-            left_swing_hold="q",
+            left_swing_hold="w",
             right_swing="d",
             right_swing_hold="s",
-            hold_hands="w",
             face_tilt_left="j",
             face_tilt_right="l",
             walk=Key.up,
@@ -100,6 +99,19 @@ controls_list = [
         events_config=dict(
             pressing_timer_interval=0.3,
             d1_pressing_timer_interval=0.05,
+        ),
+    ),
+    dict(
+        name="Forza Horizon",
+        mappings=dict(
+            d2_driving_up="w",
+            d1_driving_left="a",
+            d1_driving_right="d",
+            d1_driving_default="",
+        ),
+        events_config=dict(
+            pressing_timer_interval=0.3,
+            d1_pressing_timer_interval=0.1,
         ),
     ),
     dict(

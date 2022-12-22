@@ -32,6 +32,7 @@ class LegsState:
 
     def update(
         self,
+        mode: str,
         events: Events,
         left_hip,
         right_hip,
@@ -60,6 +61,9 @@ class LegsState:
             right_hip_angle,
             right_knee_angle,
         )
+
+        if mode == "Driving":
+            return
 
         if (
             left_knee[3] > self.KNEE_MIN_VISIBILITY

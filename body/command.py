@@ -37,22 +37,23 @@ class CommandProcessor:
         if keyboard_enabled:
             if command in command_key_mappings:
                 key = command_key_mappings[command]
-                if key:
-                    # get current pressing key
-                    previous_key = None
-                    if self.pressing_key:
-                        previous_key = self.pressing_key["key"]
+                # get current pressing key
+                previous_key = None
+                if self.pressing_key:
+                    previous_key = self.pressing_key["key"]
 
-                    # clear old timer
-                    if self.pressing_timer and self.pressing_timer.is_alive():
-                        # print("cancel timer")
-                        self.pressing_timer.cancel()
+                # clear old timer
+                if self.pressing_timer and self.pressing_timer.is_alive():
+                    # print("cancel timer")
+                    self.pressing_timer.cancel()
 
-                    # new action
-                    if previous_key != key:
-                        self.release_previous_key()
+                # new action
+                if previous_key != key:
+                    self.release_previous_key()
+                    if key:
                         self.keyboard.press(key)
 
+                if key:
                     # create new timer
                     self.pressing_timer = Timer(
                         pressing_timer_interval,

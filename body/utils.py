@@ -102,11 +102,11 @@ def get_side_facing(elements):
 
     if angle_z > 0:
         angles = [
-            [[0, 36], ["right"]],
-            [[36, 70], ["front", "right"]],
+            [[0, 36], ["left"]],
+            [[36, 70], ["front", "left"]],
             [[70, 110], ["front"]],
-            [[110, 144], ["front", "left"]],
-            [[144, 180], ["left"]],
+            [[110, 144], ["front", "right"]],
+            [[144, 180], ["right"]],
         ]
 
         for angle in angles:
@@ -115,11 +115,11 @@ def get_side_facing(elements):
 
     else:
         angles = [
-            [[0, 10], ["right"]],
-            [[10, 70], ["back", "right"]],
+            [[0, 10], ["left"]],
+            [[10, 70], ["back", "left"]],
             [[70, 110], ["back"]],
-            [[110, 170], ["back", "left"]],
-            [[170, 180], ["left"]],
+            [[110, 170], ["back", "right"]],
+            [[170, 180], ["right"]],
         ]
 
         for angle in angles:
