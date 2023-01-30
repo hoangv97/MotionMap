@@ -69,7 +69,9 @@ class ArmsState:
 
         self.crossed = None
         self.left_swing = None
+        self.left_swing_up = None
         self.right_swing = None
+        self.right_swing_up = None
         self.hold_hands = None
 
         self.driving_hands = None
@@ -172,25 +174,25 @@ class ArmsState:
 
             return
 
-        if left_right_hands_slope < 10 and is_landmarks_closed(
-            [
-                left_pinky,
-                right_pinky,
-                left_index,
-                right_index,
-                left_thumb,
-                right_thumb,
-            ],
-            0.1,
-        ):
-            if not self.hold_hands:
-                self.hold_hands = True
-                events.add("hold_hands")
-        else:
-            self.hold_hands = False
+        # if left_right_hands_slope < 10 and is_landmarks_closed(
+        #     [
+        #         left_pinky,
+        #         right_pinky,
+        #         left_index,
+        #         right_index,
+        #         left_thumb,
+        #         right_thumb,
+        #     ],
+        #     0.1,
+        # ):
+        #     if not self.hold_hands:
+        #         self.hold_hands = True
+        #         events.add("hold_hands")
+        # else:
+        #     self.hold_hands = False
 
-        if self.hold_hands:
-            return
+        # if self.hold_hands:
+        #     return
 
         if (
             compare_nums(left_wrist[0], right_wrist[0], "lt")
@@ -213,12 +215,26 @@ class ArmsState:
         else:
             self.left_swing = False
 
+        if compare_nums(left_wrist[0], nose[0], "gt") and self.left.raised:
+            if not self.left_swing_up:
+                self.left_swing_up = True
+                events.add("left_swing_up")
+        else:
+            self.left_swing_up = False
+
         if compare_nums(right_wrist[0], nose[0], "gt"):
             if not self.right_swing:
                 self.right_swing = True
                 events.add(f"right_swing{'_hold' if self.left.raised else ''}")
         else:
             self.right_swing = False
+
+        if compare_nums(right_wrist[0], nose[0], "lt") and self.right.raised:
+            if not self.right_swing_up:
+                self.right_swing_up = True
+                events.add("right_swing_up")
+        else:
+            self.right_swing_up = False
 
     def __str__(self):
         return f""

@@ -51,6 +51,7 @@ class CommandProcessor:
                 if previous_key != key:
                     self.release_previous_key()
                     if key:
+                        print("pressing", key)
                         self.keyboard.press(key)
 
                 if key:

@@ -27,7 +27,7 @@ mp_config = dict(
 )
 
 body_modes = [
-    "Normal",
+    "Action",
     "Driving",
 ]
 
@@ -127,7 +127,9 @@ controls_list = [
             face_tilt_right="l",
             walk="t",
             left_walk="f",
+            left_walk_both="r",
             right_walk="h",
+            right_walk_both="y",
             down_walk="g",
             squat="b",
         ),

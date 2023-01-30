@@ -8,6 +8,7 @@ from .utils import (
     log_landmark,
     log_angle,
     calculate_slope,
+    compare_nums,
 )
 from .arm import ArmsState
 from .leg import LegsState
@@ -225,13 +226,19 @@ class BodyState:
                     and self.arms.left.up
                     and not self.arms.right.up
                 ):
-                    self.events.add("left_walk")
+                    if compare_nums(right_wrist[0], nose[0], "gt"):
+                        self.events.add("left_walk_both")
+                    else:
+                        self.events.add("left_walk")
                 elif (
                     self.arms.right.straight
                     and self.arms.right.up
                     and not self.arms.left.up
                 ):
-                    self.events.add("right_walk")
+                    if compare_nums(left_wrist[0], nose[0], "lt"):
+                        self.events.add("right_walk_both")
+                    else:
+                        self.events.add("right_walk")
                 else:
                     self.events.add("walk")
 
