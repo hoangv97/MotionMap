@@ -2,6 +2,16 @@
 
 Convert real-time body gestures such as walking, squat, swing hands, tilt head,... to keyboard input using Mediapipe Pose solution.
 
+## Demo
+
+RPG game
+
+[![Watch the video](https://img.youtube.com/vi/nMx1VlgjfBw/default.jpg)](https://youtu.be/nMx1VlgjfBw)
+
+Racing game
+
+[![Watch the video](https://img.youtube.com/vi/gAEEKOdsAxs/default.jpg)](https://youtu.be/gAEEKOdsAxs)
+
 ## Installation
 
 Create an virtual environment (optional)
