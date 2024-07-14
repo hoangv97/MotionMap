@@ -5,8 +5,8 @@ import numpy as np
 from PySide6.QtCore import Qt, QThread, Signal
 from PySide6.QtGui import QImage
 import mediapipe as mp
-from body import BodyState
-from body.const import IMAGE_HEIGHT, IMAGE_WIDTH
+from .body import BodyState
+from .config import IMAGE_HEIGHT, IMAGE_WIDTH
 
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
@@ -31,6 +31,7 @@ class Cv2Thread(QThread):
     def run(self):
         print("run mediapipe", self.mp_config)
         self.cap = cv2.VideoCapture(0)
+
         with mp_pose.Pose(**self.mp_config) as pose:
             while self.cap.isOpened() and self.status:
                 success, image = self.cap.read()
@@ -38,6 +39,8 @@ class Cv2Thread(QThread):
                     print("Ignoring empty camera frame.")
                     # If loading a video, use 'break' instead of 'continue'.
                     continue
+
+                timestamp = self.cap.get(cv2.CAP_PROP_POS_MSEC)
 
                 # To improve performance, optionally mark the image as not writeable to
                 # pass by reference.
@@ -84,7 +87,7 @@ class Cv2Thread(QThread):
                     landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style(),
                 )
 
-                self.body.calculate(image, results)
+                self.body.calculate(image, results, timestamp)
 
                 # Reading the image in RGB to display it
                 image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)

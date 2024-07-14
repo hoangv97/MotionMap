@@ -1,8 +1,6 @@
-import sys
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtGui import QImage, QPixmap
 from PySide6.QtWidgets import (
-    QApplication,
     QComboBox,
     QHBoxLayout,
     QLabel,
@@ -14,191 +12,27 @@ from PySide6.QtWidgets import (
     QSlider,
     QPushButton,
 )
-from pynput.keyboard import Key
-from cv2_thread import Cv2Thread
-from body.const import IMAGE_HEIGHT, IMAGE_WIDTH
-
-# Config for mediapipe pose solution
-mp_config = dict(
-    min_detection_confidence=0.5,
-    min_tracking_confidence=0.5,
-    model_complexity=1,
-    enable_segmentation=True,
+from .cv2_thread import Cv2Thread
+from .config import (
+    window_title,
+    window_geometry,
+    IMAGE_WIDTH,
+    IMAGE_HEIGHT,
+    mp_config,
+    body_config,
+    events_config,
+    inputs,
+    controls_list,
+    body_modes,
 )
-
-body_modes = [
-    "Action",
-    "Driving",
-]
-
-# Config for body processor
-body_config = dict(
-    draw_angles=False,  # Show calculated angles on camera
-    show_coords=False,  # Show body coordinates
-)
-
-controls_list = [
-    dict(
-        name="Zelda",
-        mappings=dict(
-            cross="",
-            left_swing="a",
-            left_swing_hold="w",
-            right_swing="d",
-            right_swing_hold="s",
-            face_tilt_left="j",
-            face_tilt_right="l",
-            walk=Key.up,
-            left_walk=Key.left,
-            right_walk=Key.right,
-            down_walk=Key.down,
-            squat="",
-        ),
-    ),
-    dict(
-        name="Elden Ring",
-        mappings=dict(
-            cross="",
-            left_swing="n",
-            left_swing_hold="f",
-            right_swing=Key.space,
-            right_swing_hold="x",
-            face_tilt_left="j",
-            face_tilt_right="l",
-            walk="w",
-            left_walk="a",
-            right_walk="d",
-            down_walk="s",
-            squat="",
-        ),
-    ),
-    dict(
-        name="GoW",
-        mappings=dict(
-            cross="",
-            left_swing="z",
-            left_swing_hold="1",
-            right_swing="f",
-            right_swing_hold="2",
-            face_tilt_left=Key.left,
-            face_tilt_right=Key.right,
-            walk="w",
-            left_walk="a",
-            right_walk="d",
-            down_walk="s",
-            squat="e",
-        ),
-    ),
-    dict(
-        name="Euro Truck",
-        mappings=dict(
-            d2_driving_up=Key.up,
-            d1_driving_left=Key.left,
-            d1_driving_right=Key.right,
-        ),
-        events_config=dict(
-            pressing_timer_interval=0.3,
-            d1_pressing_timer_interval=0.05,
-        ),
-    ),
-    dict(
-        name="Forza Horizon",
-        mappings=dict(
-            d2_driving_up="w",
-            d1_driving_left="a",
-            d1_driving_right="d",
-            d1_driving_default="",
-        ),
-        events_config=dict(
-            pressing_timer_interval=0.3,
-            d1_pressing_timer_interval=0.1,
-        ),
-    ),
-    dict(
-        name="Test",
-        mappings=dict(
-            cross="c",
-            left_swing="a",
-            left_swing_hold="w",
-            right_swing="d",
-            right_swing_hold="s",
-            hold_hands="n",
-            face_tilt_left="j",
-            face_tilt_right="l",
-            walk="t",
-            left_walk="f",
-            left_walk_both="r",
-            right_walk="h",
-            right_walk_both="y",
-            down_walk="g",
-            squat="b",
-        ),
-    ),
-]
-
-events_config = dict(
-    keyboard_enabled=False,  # toggle keyboard events
-    cross_cmd_enabled=True,  # toggle cross command (used for toggling keyboard events)
-    pressing_timer_interval=0.3,  # key pressed interval
-    d1_pressing_timer_interval=1.0,  # key pressed interval for walking commands
-    d2_pressing_timer_interval=0.1,  # key pressed interval for face tilt commands
-    command_key_mappings=controls_list[0]["mappings"],
-)
-
-inputs = [
-    dict(
-        name="Min detection confidence",
-        key="min_detection_confidence",
-        type="mp",
-        input="slider_percentage",
-        min=0,
-        max=100,
-        value=mp_config["min_detection_confidence"] * 100,
-        hidden=True,
-    ),
-    dict(
-        name="Min detection confidence",
-        key="min_tracking_confidence",
-        type="mp",
-        input="slider_percentage",
-        min=0,
-        max=100,
-        value=mp_config["min_tracking_confidence"] * 100,
-        hidden=True,
-    ),
-    dict(
-        name="Model complexity",
-        key="model_complexity",
-        type="mp",
-        input="slider",
-        min=0,
-        max=2,
-        value=mp_config["model_complexity"],
-        hidden=True,
-    ),
-    dict(
-        name="Show segmentation", key="enable_segmentation", type="mp", input="checkbox"
-    ),
-    dict(name="Show angles", key="draw_angles", type="body", input="checkbox"),
-    dict(name="Show body coords", key="show_coords", type="body", input="checkbox"),
-    dict(
-        name="Enable keyboard", key="keyboard_enabled", type="events", input="checkbox"
-    ),
-    dict(
-        name="Use cross command to toggle keyboard",
-        key="cross_cmd_enabled",
-        type="events",
-        input="checkbox",
-    ),
-]
 
 
 class Window(QMainWindow):
     def __init__(self):
         super().__init__()
         # Title and dimensions
-        self.setWindowTitle("Pose Detection")
-        self.setGeometry(100, 100, 900, 650)
+        self.setWindowTitle(window_title)
+        self.setGeometry(*window_geometry)
 
         # Create a label for the display camera
         self.camera_label = QLabel(self)
@@ -230,6 +64,10 @@ class Window(QMainWindow):
         self.state_label.setMinimumSize(550, 500)
         self.state_label.setMaximumSize(550, 1000)
         self.state_label.setWordWrap(True)
+        self.state_label.setAlignment(Qt.AlignTop)
+        # set font size
+        font = self.state_label.font()
+        font.setPointSize(20)
         log_layout.addWidget(self.state_label)
 
         # Main layout
@@ -259,7 +97,7 @@ class Window(QMainWindow):
         self.cv2_btn.setDisabled(True)
 
     def cv2_btn_clicked(self):
-        # ERROR!
+        # TODO ERROR!
         self.create_cv2_thread()
         self.cv2_thread.start()
 
@@ -364,10 +202,3 @@ class Window(QMainWindow):
 
     def controls_mode_combobox_change(self, index):
         self.cv2_thread.body.mode = body_modes[index]
-
-
-if __name__ == "__main__":
-    app = QApplication()
-    w = Window()
-    w.show()
-    sys.exit(app.exec())
