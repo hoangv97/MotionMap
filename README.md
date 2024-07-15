@@ -30,15 +30,15 @@ pip install -r requirements.txt
 ## Run the application
 
 ```sh
-python main.py
+python app.py
 ```
 
-## Build 
+## Build
 
 ### Windows
 
 ```sh
-pyinstaller --onefile --windowed main.py
+python -m nuitka app.py
 ```
 
 ## Configuration

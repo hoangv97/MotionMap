@@ -4,3 +4,4 @@ numpy
 pynput
 PySide6
 pyinstaller
+nuitka
