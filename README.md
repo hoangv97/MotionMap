@@ -38,7 +38,7 @@ python app.py
 ### Windows
 
 ```sh
-python -m nuitka --onefile --disable-console app.py
+python -m nuitka app.py
 ```
 
 ## Configuration

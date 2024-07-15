@@ -39,6 +39,21 @@ def is_arm_up(state, side: Literal["left", "right"]):
 
 
 MOVEMENTS = [
+    # raise both hands up
+    {
+        "name": "both_hands_up",
+        "type": "1_click",
+        "checkpoints": [
+            {
+                "condition": lambda state: compare_nums(
+                    state["LEFT_WRIST"]["pose"][1], state["NOSE"]["pose"][1], "lt"
+                )
+                and compare_nums(
+                    state["RIGHT_WRIST"]["pose"][1], state["NOSE"]["pose"][1], "lt"
+                )
+            },
+        ],
+    },
     # cross hands in front of the body
     {
         "name": "cross_hands",
@@ -273,6 +288,7 @@ MOVEMENTS = [
 
 SEPARATED_MOVEMENTS_NAMES = (
     (
+        "both_hands_up",
         "cross_hands",
         "left_heavy_swing",
         "right_heavy_swing",

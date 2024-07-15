@@ -48,7 +48,9 @@ class Events:
             {"name": command_name, "timestamp": timestamp, "type": command_type}
         )
 
-        print("add command", command_name, command_type)
+        # print("add command", command_name, command_type)
+
+        pressing_timer_interval = self.pressing_timer_interval[command_type]
 
         # Split command by type
         if command_type == "1_click":
@@ -56,21 +58,21 @@ class Events:
                 command_name,
                 self.keyboard_enabled,
                 self.command_key_mappings,
-                self.pressing_timer_interval[command_type],
+                pressing_timer_interval,
             )
         elif command_type == "hold":
             self.hold_cmd_process.add_command(
                 command_name,
                 self.keyboard_enabled,
                 self.command_key_mappings,
-                self.pressing_timer_interval[command_type],
+                pressing_timer_interval,
             )
         elif command_type == "hold_2":
             self.hold_2_cmd_process.add_command(
                 command_name,
                 self.keyboard_enabled,
                 self.command_key_mappings,
-                self.pressing_timer_interval[command_type],
+                pressing_timer_interval,
             )
 
     def __str__(self):

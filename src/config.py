@@ -33,13 +33,33 @@ body_config = dict(
 
 controls_list = [
     dict(
+        name="Zelda",
+        mappings=dict(
+            cross_hands="",
+            both_hands_up="",
+            left_swing="a",
+            left_heavy_swing="w",
+            right_swing="d",
+            right_heavy_swing="s",
+            face_tilt_left="j",
+            face_tilt_right="l",
+            walk_both_hands_down=Key.up,
+            walk_left_hand_up=Key.left,
+            walk_right_hand_up=Key.right,
+            walk_both_hands_up=Key.down,
+            squat="",
+            left_squat="",
+            right_squat="",
+        ),
+    ),
+    dict(
         name="Test",
         mappings=dict(),
     ),
 ]
 
 events_config = dict(
-    keyboard_enabled=False,  # toggle keyboard events
+    keyboard_enabled=True,  # toggle keyboard events
     command_key_mappings=controls_list[0]["mappings"],
     pressing_timer_interval={
         "1_click": 0.3,  # key pressed interval
