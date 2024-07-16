@@ -33,6 +33,26 @@ body_config = dict(
 
 controls_list = [
     dict(
+        name="Elden Ring",
+        mappings=dict(
+            cross_hands="",
+            both_hands_up="",
+            left_swing="n",
+            left_heavy_swing="f",
+            right_swing=Key.space,
+            right_heavy_swing="x",
+            face_tilt_left="j",
+            face_tilt_right="l",
+            walk_both_hands_down="w",
+            walk_left_hand_up="a",
+            walk_right_hand_up="d",
+            walk_both_hands_up="s",
+            squat="",
+            left_squat="",
+            right_squat="",
+        ),
+    ),
+    dict(
         name="Zelda",
         mappings=dict(
             cross_hands="",
