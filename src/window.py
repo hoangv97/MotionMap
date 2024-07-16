@@ -56,7 +56,7 @@ class Window(QMainWindow):
             elif "slider" in input_type:
                 self.add_slider(input, log_layout)
 
-        self.add_controls_mode_combobox(log_layout)
+        # self.add_controls_mode_combobox(log_layout)  # hide mode for now
         self.add_controls_combobox(log_layout)
 
         # Add state label
@@ -65,9 +65,6 @@ class Window(QMainWindow):
         self.state_label.setMaximumSize(550, 1000)
         self.state_label.setWordWrap(True)
         self.state_label.setAlignment(Qt.AlignTop)
-        # set font size
-        font = self.state_label.font()
-        font.setPointSize(20)
         log_layout.addWidget(self.state_label)
 
         # Main layout
@@ -177,9 +174,7 @@ class Window(QMainWindow):
         layout.addLayout(controls_row)
 
     def controls_combobox_change(self, index):
-        self.cv2_thread.body.events.command_key_mappings = controls_list[index][
-            "mappings"
-        ]
+        events_config["command_key_mappings"] = controls_list[index]["mappings"]
         new_events_config = events_config
         if "events_config" in controls_list[index]:
             new_events_config = controls_list[index]["events_config"]
