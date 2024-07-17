@@ -304,6 +304,10 @@ SEPARATED_MOVEMENTS_NAMES = (
         "walk_right_hand_up",
         "walk_both_hands_down",
     ),
+    (
+        "face_tilt_left",
+        "face_tilt_right",
+    ),
 )
 
 SEPARATED_MOVEMENTS_DURATION = 1000  # ms
