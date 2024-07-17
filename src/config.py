@@ -84,7 +84,7 @@ events_config = dict(
     pressing_timer_interval={
         "1_click": 0.3,  # key pressed interval
         "hold": 1.0,  # key pressed interval for walking commands
-        "hold_2": 0.1,  # key pressed interval for face tilt commands
+        "hold_2": 0.2,  # key pressed interval for face tilt commands
     },
 )
 

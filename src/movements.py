@@ -10,16 +10,16 @@ ELBOW_CROSS_MAX_ANGLE = 100  # cross_hands
 
 SQUAT_KNEE_MAX_ANGLE = 120  # squat
 LEG_SQUAT_KNEE_MAX_ANGLE = 90  # left_squat, right_squat
-WALK_KNEE_MAX_ANGLE = 120  # walk
+WALK_KNEE_MAX_ANGLE = 130  # walk
 FACE_TILT_SLOPE_MAX_ANGLE = 35  # face_tilt
-STRAIGHT_ELBOW_MAX_ANGLE = 160  # straight arm
+STRAIGHT_ELBOW_MAX_ANGLE = 140  # straight arm
 UP_SHOULDERS_MAX_ANGLE = 45  # up arm
 
 
 def is_walking(state):
     return compare_nums(
-        state["ANGLE_LEFT_KNEE"], WALK_KNEE_MAX_ANGLE, "gt"
-    ) or compare_nums(state["ANGLE_RIGHT_KNEE"], WALK_KNEE_MAX_ANGLE, "gt")
+        state["ANGLE_LEFT_KNEE"], WALK_KNEE_MAX_ANGLE, "lt"
+    ) or compare_nums(state["ANGLE_RIGHT_KNEE"], WALK_KNEE_MAX_ANGLE, "lt")
 
 
 def is_arm_straight(state, side: Literal["left", "right"]):
@@ -287,34 +287,39 @@ MOVEMENTS = [
 ]
 
 SEPARATED_MOVEMENTS_NAMES = (
-    (
-        "both_hands_up",
-        "cross_hands",
-        "left_heavy_swing",
-        "right_heavy_swing",
-        "left_swing",
-        "right_swing",
-    ),
-    (
-        "squat",
-        "left_squat",
-        "right_squat",
-        "walk_both_hands_up",
-        "walk_left_hand_up",
-        "walk_right_hand_up",
-        "walk_both_hands_down",
-    ),
-    (
-        "face_tilt_left",
-        "face_tilt_right",
-    ),
+    {
+        "group": (
+            "both_hands_up",
+            "cross_hands",
+            "left_heavy_swing",
+            "right_heavy_swing",
+            "left_swing",
+            "right_swing",
+        ),
+        "duration": 500,  # ms, ignore if the same movement is detected within 500ms
+    },
+    {
+        "group": (
+            "squat",
+            "left_squat",
+            "right_squat",
+            "walk_both_hands_up",
+            "walk_left_hand_up",
+            "walk_right_hand_up",
+            "walk_both_hands_down",
+        ),
+    },
+    {
+        "group": (
+            "face_tilt_left",
+            "face_tilt_right",
+        ),
+    },
 )
-
-SEPARATED_MOVEMENTS_DURATION = 1000  # ms
 
 
 def get_separated_movements_by_name(name):
     for movements in SEPARATED_MOVEMENTS_NAMES:
-        if name in movements:
+        if name in movements["group"]:
             return movements
-    return []
+    return None

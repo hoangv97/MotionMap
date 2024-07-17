@@ -1,5 +1,5 @@
 from .command import CommandProcessor
-from .movements import SEPARATED_MOVEMENTS_DURATION, get_separated_movements_by_name
+from .movements import get_separated_movements_by_name
 
 
 class Events:
@@ -31,14 +31,14 @@ class Events:
     def add(self, command_name, command_type, timestamp):
         # check in history and ignore if related movements are already added during the configured duration
         ignored_movements = get_separated_movements_by_name(command_name)
-        for event in self.history:
-            event_name = event["name"]
-            if (
-                event_name in ignored_movements
-                and timestamp - event["timestamp"] < SEPARATED_MOVEMENTS_DURATION
-            ):
-                print("ignore", command_name, command_type)
-                return
+        if ignored_movements:
+            for event in self.history:
+                event_name = event["name"]
+                if event_name in ignored_movements["group"] and timestamp - event[
+                    "timestamp"
+                ] < ignored_movements.get("duration", 0):
+                    print("ignore", command_name, command_type)
+                    return
 
         # only keeps latest events in history from 10 seconds
         self.history = [
