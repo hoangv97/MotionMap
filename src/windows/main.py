@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QBoxLayout,
 )
 from time import sleep
+from copy import deepcopy
 from ..cv2_thread import Cv2Thread
 from ..config import (
     window_title,
@@ -28,7 +29,7 @@ from ..config import (
     auto_start_camera,
 )
 from ..utils import list_camera_ports
-from .events import EventsConfigWindow
+from .events_config import EventsConfigWindow
 
 
 class MainWindow(QMainWindow):
@@ -38,8 +39,15 @@ class MainWindow(QMainWindow):
         print("get working camera ports")
         _, self.camera_ports = list_camera_ports()
 
+        # Thread in charge of updating the image
+        self.create_cv2_thread()
+
+        # Create events config window
         self.events_config_window = EventsConfigWindow(
+            parent_window=self,
             command_key_mappings=events_config["command_key_mappings"],
+            pressing_timer_interval=events_config["pressing_timer_interval"],
+            movements=self.cv2_thread.body.movements,
         )
         self.events_config_window.data_saved.connect(self.event_config_window_saved)
 
@@ -56,6 +64,7 @@ class MainWindow(QMainWindow):
         # Create a button to start/stop the camera
         self.cv2_btn = QPushButton()
         self.cv2_btn.styleSheet = "margin-top: 10px;"
+        self.cv2_btn.setFixedSize(200, 30)
         self.cv2_btn.clicked.connect(self.cv2_btn_clicked)
 
         # Add camera ports combobox
@@ -74,8 +83,9 @@ class MainWindow(QMainWindow):
         # self.add_controls_mode_combobox(log_layout)
 
         # Add events config window button
-        events_config_window_button = QPushButton("Set up key bindings")
+        events_config_window_button = QPushButton("Key bindings configuration")
         events_config_window_button.clicked.connect(self.events_config_window.show)
+        events_config_window_button.setFixedSize(250, 25)
         log_layout.addWidget(events_config_window_button)
 
         # Add state label
@@ -86,7 +96,7 @@ class MainWindow(QMainWindow):
         # Left layout
         left_layout = QVBoxLayout()
         left_layout.addWidget(self.camera_label)
-        left_layout.addWidget(self.cv2_btn)
+        left_layout.addWidget(self.cv2_btn, alignment=Qt.AlignCenter)
 
         # Main layout
         main_layout = QVBoxLayout()
@@ -97,9 +107,6 @@ class MainWindow(QMainWindow):
         main_widget = QWidget(self)
         main_widget.setLayout(main_layout)
         self.setCentralWidget(main_widget)
-
-        # Thread in charge of updating the image
-        self.create_cv2_thread()
 
         # Auto start camera
         if auto_start_camera:
@@ -119,8 +126,6 @@ class MainWindow(QMainWindow):
         self.cv2_thread.update_status.connect(self.setCv2Status)
         self.cv2_thread.update_frame.connect(self.setCv2Image)
         self.cv2_thread.update_state.connect(self.setCv2State)
-
-        self.cv2_btn.setDisabled(True)
 
     def cv2_btn_clicked(self):
         self.cv2_thread.toggle()
@@ -150,6 +155,7 @@ class MainWindow(QMainWindow):
         key = slider["key"]
         _type = slider["type"]
         _input = slider["input"]
+        description = slider.get("description", None)
 
         row = QFormLayout()
 
@@ -157,10 +163,17 @@ class MainWindow(QMainWindow):
         _slider.setRange(slider["min"], slider["max"])
         _slider.setValue(slider["value"])
         _slider.setSingleStep(1)
+        _slider.setFixedSize(200, 20)
+
         _slider.valueChanged.connect(
             lambda value: self.slider_value_changed(key, value, _type, _input)
         )
-        row.addRow(slider["name"], _slider)
+
+        label = QLabel(f"{slider['name']}: ")
+        if description:
+            label.setToolTip(description)
+
+        row.addRow(label, _slider)
         layout.addLayout(row)
 
     def slider_value_changed(self, key, value, type, input):
@@ -178,6 +191,7 @@ class MainWindow(QMainWindow):
         _checkbox = QCheckBox(checkbox["name"])
         key = checkbox["key"]
         _type = checkbox["type"]
+        description = checkbox.get("description", None)
 
         checked = Qt.Unchecked
         if _type == "mp":
@@ -187,6 +201,8 @@ class MainWindow(QMainWindow):
         elif _type == "events":
             checked = Qt.Checked if events_config[key] else Qt.Unchecked
         _checkbox.setCheckState(checked)
+        if description:
+            _checkbox.setToolTip(description)
 
         _checkbox.stateChanged.connect(
             lambda value: self.checkbox_state_changed(key, value, _type)

@@ -1,18 +1,20 @@
-# Body gesture to keyboard control
+# MotionMap: Transforming Body Movements into Keyboard Actions
 
-Convert real-time body gestures such as walking, squat, swing hands, tilt head,... to keyboard input using Mediapipe Pose solution.
+Transform real-time body movements — including walking, squatting, hand swinging, and head tilting — into keyboard inputs, enabling a more interactive and intuitive way to control apps and games.
 
 ## Demo
 
-RPG game
+Control a RPG game (Legend of Zelda)
 
 [![Watch the video](https://img.youtube.com/vi/nMx1VlgjfBw/default.jpg)](https://youtu.be/nMx1VlgjfBw)
 
-Racing game
+Control a racing game
 
 [![Watch the video](https://img.youtube.com/vi/gAEEKOdsAxs/default.jpg)](https://youtu.be/gAEEKOdsAxs)
 
-## Installation
+## How to install
+
+Install python3
 
 Create an virtual environment (optional)
 
@@ -41,14 +43,14 @@ python app.py
 python -m nuitka app.py
 ```
 
-Run the exe file
+Run the `app.exe` file in the root directory
 
 ## Configuration
 
 In `src/config.py` edit these objects:
 
 - `mp_config`: Edit mediapipe pose configuration
-- `command_key_mappings_list`: Edit input controller
+- `control_list`: Edit input controller
 - `events_config`: Edit keyboard events configuration
 
 ## Supported body gestures
@@ -81,6 +83,8 @@ Tilt head in left/right
 
 - Move 2 hands close to enable steering wheel, tilt left or right to control
 - Move 2 hands inside the green box to enable driving up control
+
+#### FPS mode (in development)
 
 ## Improvements
 

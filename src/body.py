@@ -13,7 +13,11 @@ from .utils import (
 )
 from .events import Events
 from .config import DRIVING_UP_AREA
-from .movements import MOVEMENTS, get_separated_movements_by_name
+from .movements import (
+    Movements,
+    get_separated_movements_by_name,
+    default_movements_config,
+)
 
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
@@ -91,8 +95,8 @@ class BodyState:
         self.draw_angles = body_config["draw_angles"]
         self.show_coords = body_config["show_coords"]
 
+        self.movements = Movements(movements_config=deepcopy(default_movements_config))
         self.events = Events(**events_config)
-        self.movements = deepcopy(MOVEMENTS)
 
         self.state = {
             # "NOSE": { pose: (x, y, z, v), world: (x, y, z, v), visibility: bool },
@@ -208,7 +212,7 @@ class BodyState:
     def detect_movement(self, timestamp):
         ignored_movement_names = []
 
-        for movement in self.movements:
+        for movement in self.movements.get_current_list():
             name = movement["name"]
             movement_type = movement["type"]
             checkpoints = movement["checkpoints"]
@@ -216,36 +220,33 @@ class BodyState:
             if name in ignored_movement_names:
                 continue
 
-            if movement_type in ["1_click", "hold", "hold_2"]:
-                for i, checkpoint in enumerate(checkpoints):
-                    condition = checkpoint["condition"]
-                    state = checkpoint.get("state", False)
-                    active_duration = checkpoint.get("active_duration", 0)
+            for i, checkpoint in enumerate(checkpoints):
+                condition = checkpoint["condition"]
+                state = checkpoint.get("state", False)
+                active_duration = checkpoint.get("active_duration", 0)
 
-                    if condition(self.state):
-                        if not state:
-                            checkpoint["state"] = True
-                            if active_duration:
-                                checkpoint["active_time"] = timestamp
+                if condition(self.state):
+                    if not state:
+                        checkpoint["state"] = True
+                        if active_duration:
+                            checkpoint["active_time"] = timestamp
 
-                            if i == len(checkpoints) - 1:
-                                # if all checkpoints are active, add the movement to the events
-                                self.events.add(
-                                    command_name=name,
-                                    command_type=movement_type,
-                                    timestamp=timestamp,
-                                )
+                        if i == len(checkpoints) - 1:
+                            # if all checkpoints are active, add the movement to the events
+                            self.events.add(
+                                command_name=name,
+                                command_type=movement_type,
+                                timestamp=timestamp,
+                            )
 
-                                # ignore the movements
-                                ignored_movements = get_separated_movements_by_name(
-                                    name
-                                )
-                                if ignored_movements:
-                                    ignored_movement_names += ignored_movements["group"]
+                            # ignore the movements
+                            ignored_movements = get_separated_movements_by_name(name)
+                            if ignored_movements:
+                                ignored_movement_names += ignored_movements["group"]
 
-                    elif timestamp - checkpoint.get("active_time", 0) > active_duration:
-                        checkpoint["state"] = False
-                        break
+                elif timestamp - checkpoint.get("active_time", 0) > active_duration:
+                    checkpoint["state"] = False
+                    break
 
     def run_draw_angles(self, image):
         for angle in ANGLES:

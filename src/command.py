@@ -24,7 +24,7 @@ class CommandProcessor:
 
     def add_command(
         self,
-        command,
+        command: str,
         keyboard_enabled: bool,
         command_key_mappings: dict,
         pressing_timer_interval: float,

@@ -24,8 +24,8 @@ class Cv2Thread(QThread):
         self, parent=None, mp_config=None, body_config=None, events_config=None
     ):
         QThread.__init__(self, parent)
-        self.status = True
-        self.cap = True
+        self.status = False
+        self.cap = None
         self.body = BodyState(body_config, events_config)
         self.mp_config = mp_config
         self.camera_port = 0

@@ -5,9 +5,9 @@ from .movements import get_separated_movements_by_name
 class Events:
     def __init__(
         self,
-        keyboard_enabled,
-        pressing_timer_interval,
-        command_key_mappings,
+        keyboard_enabled: bool,
+        pressing_timer_interval: dict,
+        command_key_mappings: dict,
     ):
         self.keyboard_enabled = keyboard_enabled
         self.command_key_mappings = command_key_mappings
@@ -15,11 +15,9 @@ class Events:
 
         self.history = []
 
-        # process all commands
-        self.one_click_cmd_process = CommandProcessor()
-        # process cmd related to direction (left, right)
-        self.hold_cmd_process = CommandProcessor()  # walk
-        self.hold_2_cmd_process = CommandProcessor()  # face
+        self.commands_map: dict[str, CommandProcessor] = dict()
+        for key in self.pressing_timer_interval.keys():
+            self.commands_map[key] = CommandProcessor()
 
     def __setitem__(self, key, value):
         setattr(self, key, value)
@@ -52,33 +50,16 @@ class Events:
 
         pressing_timer_interval = self.pressing_timer_interval[command_type]
 
-        # Split command by type
-        if command_type == "1_click":
-            self.one_click_cmd_process.add_command(
-                command_name,
-                self.keyboard_enabled,
-                self.command_key_mappings,
-                pressing_timer_interval,
-            )
-        elif command_type == "hold":
-            self.hold_cmd_process.add_command(
-                command_name,
-                self.keyboard_enabled,
-                self.command_key_mappings,
-                pressing_timer_interval,
-            )
-        elif command_type == "hold_2":
-            self.hold_2_cmd_process.add_command(
-                command_name,
-                self.keyboard_enabled,
-                self.command_key_mappings,
-                pressing_timer_interval,
-            )
+        self.commands_map[command_type].add_command(
+            command_name,
+            self.keyboard_enabled,
+            self.command_key_mappings,
+            pressing_timer_interval,
+        )
 
     def __str__(self):
-        return f"""
-Hold ({len(self.hold_cmd_process.commands)}): {self.hold_cmd_process}
+        result = ""
+        for k, v in self.commands_map.items():
+            result += f"{k} ({len(v.commands)}): {v}\n"
 
-Hold2 ({len(self.hold_2_cmd_process.commands)}): {self.hold_2_cmd_process}
-
-1 click ({len(self.one_click_cmd_process.commands)}): {self.one_click_cmd_process}"""
+        return result
