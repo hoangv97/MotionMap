@@ -5,12 +5,14 @@ BaseOptions = mp.tasks.BaseOptions
 
 window_title = "Body Controller"
 # Window dimensions: x, y, width, height
-window_geometry = (100, 100, 1200, 850)
+window_geometry = (100, 100, 660, 680)
 
 IMAGE_WIDTH = 640
 IMAGE_HEIGHT = 480
 
 DRIVING_UP_AREA = dict(x=250, y=290, width=140, height=140)
+
+auto_start_camera = False
 
 # Config for mediapipe pose solution
 mp_config = dict(
@@ -32,6 +34,10 @@ body_config = dict(
 )
 
 controls_list = [
+    dict(
+        name="Empty",
+        mappings=dict(),
+    ),
     dict(
         name="Elden Ring",
         mappings=dict(
@@ -72,15 +78,11 @@ controls_list = [
             right_squat="",
         ),
     ),
-    dict(
-        name="Test",
-        mappings=dict(),
-    ),
 ]
 
 events_config = dict(
-    keyboard_enabled=True,  # toggle keyboard events
-    command_key_mappings=controls_list[0]["mappings"],
+    keyboard_enabled=False,  # toggle keyboard events
+    command_key_mappings=dict(),
     pressing_timer_interval={
         "1_click": 0.3,  # key pressed interval
         "hold": 1.0,  # key pressed interval for walking commands
@@ -120,10 +122,20 @@ inputs = [
         hidden=True,
     ),
     dict(
-        name="Show segmentation", key="enable_segmentation", type="mp", input="checkbox"
+        name="Show segmentation",
+        key="enable_segmentation",
+        type="mp",
+        input="checkbox",
+        hidden=True,
     ),
     dict(name="Show angles", key="draw_angles", type="body", input="checkbox"),
-    dict(name="Show body coords", key="show_coords", type="body", input="checkbox"),
+    dict(
+        name="Show body coords",
+        key="show_coords",
+        type="body",
+        input="checkbox",
+        hidden=True,
+    ),
     dict(
         name="Enable keyboard", key="keyboard_enabled", type="events", input="checkbox"
     ),

@@ -237,9 +237,11 @@ class BodyState:
                                 )
 
                                 # ignore the movements
-                                ignored_movement_names += (
-                                    get_separated_movements_by_name(name)
+                                ignored_movements = get_separated_movements_by_name(
+                                    name
                                 )
+                                if ignored_movements:
+                                    ignored_movement_names += ignored_movements["group"]
 
                     elif timestamp - checkpoint.get("active_time", 0) > active_duration:
                         checkpoint["state"] = False
@@ -276,7 +278,7 @@ class BodyState:
         for angle in ANGLES:
             angle_value = self.state[angle_key_name(angle["name"])]
 
-            logs += f"{angle_key_name(angle['name'])}: {log_angle(angle_value)}\n"
+            # logs += f"{angle_key_name(angle['name'])}: {log_angle(angle_value)}\n"
 
         for slope in SLOPES:
             slope_value = self.state[slope_key_name(slope["name"])]

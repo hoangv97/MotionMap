@@ -11,9 +11,11 @@ from PySide6.QtWidgets import (
     QFormLayout,
     QSlider,
     QPushButton,
+    QBoxLayout,
 )
-from .cv2_thread import Cv2Thread
-from .config import (
+from time import sleep
+from ..cv2_thread import Cv2Thread
+from ..config import (
     window_title,
     window_geometry,
     IMAGE_WIDTH,
@@ -22,31 +24,44 @@ from .config import (
     body_config,
     events_config,
     inputs,
-    controls_list,
     body_modes,
+    auto_start_camera,
 )
+from ..utils import list_camera_ports
+from .events import EventsConfigWindow
 
 
-class Window(QMainWindow):
+class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+
+        print("get working camera ports")
+        _, self.camera_ports = list_camera_ports()
+
+        self.events_config_window = EventsConfigWindow(
+            command_key_mappings=events_config["command_key_mappings"],
+        )
+        self.events_config_window.data_saved.connect(self.event_config_window_saved)
+
         # Title and dimensions
         self.setWindowTitle(window_title)
         self.setGeometry(*window_geometry)
 
         # Create a label for the display camera
-        self.camera_label = QLabel(self)
+        self.camera_label = QLabel()
         self.camera_label.setFixedSize(IMAGE_WIDTH, IMAGE_HEIGHT)
 
         log_layout = QVBoxLayout()
 
-        self.cv2_btn = QPushButton(text="Restart camera")
+        # Create a button to start/stop the camera
+        self.cv2_btn = QPushButton()
+        self.cv2_btn.styleSheet = "margin-top: 10px;"
         self.cv2_btn.clicked.connect(self.cv2_btn_clicked)
-        # log_layout.addWidget(self.cv2_btn)
 
-        # Thread in charge of updating the image
-        self.create_cv2_thread()
+        # Add camera ports combobox
+        self.add_controls_camera_ports(log_layout)
 
+        # Add inputs
         for input in inputs:
             if "hidden" in input and input["hidden"]:
                 continue
@@ -56,29 +71,42 @@ class Window(QMainWindow):
             elif "slider" in input_type:
                 self.add_slider(input, log_layout)
 
-        # self.add_controls_mode_combobox(log_layout)  # hide mode for now
-        self.add_controls_combobox(log_layout)
+        # self.add_controls_mode_combobox(log_layout)
+
+        # Add events config window button
+        events_config_window_button = QPushButton("Set up key bindings")
+        events_config_window_button.clicked.connect(self.events_config_window.show)
+        log_layout.addWidget(events_config_window_button)
 
         # Add state label
         self.state_label = QLabel(self)
-        self.state_label.setMinimumSize(550, 500)
-        self.state_label.setMaximumSize(550, 1000)
         self.state_label.setWordWrap(True)
-        self.state_label.setAlignment(Qt.AlignTop)
         log_layout.addWidget(self.state_label)
 
+        # Left layout
+        left_layout = QVBoxLayout()
+        left_layout.addWidget(self.camera_label)
+        left_layout.addWidget(self.cv2_btn)
+
         # Main layout
-        layout = QHBoxLayout()
-        layout.addWidget(self.camera_label)
-        layout.addLayout(log_layout)
+        main_layout = QVBoxLayout()
+        main_layout.addLayout(left_layout)
+        main_layout.addLayout(log_layout)
 
         # Central widget
-        widget = QWidget(self)
-        widget.setLayout(layout)
-        self.setCentralWidget(widget)
+        main_widget = QWidget(self)
+        main_widget.setLayout(main_layout)
+        self.setCentralWidget(main_widget)
+
+        # Thread in charge of updating the image
+        self.create_cv2_thread()
 
         # Auto start camera
-        self.cv2_thread.start()
+        if auto_start_camera:
+            self.cv2_thread.start()
+        else:
+            self.cv2_btn.setText("Start camera")
+            self.cv2_btn.setDisabled(False)
 
     def create_cv2_thread(self):
         self.cv2_thread = Cv2Thread(
@@ -87,25 +115,36 @@ class Window(QMainWindow):
             body_config=body_config,
             events_config=events_config,
         )
-        self.cv2_thread.finished.connect(self.close)
-        self.cv2_thread.update_frame.connect(self.setImage)
-        self.cv2_thread.update_state.connect(self.setState)
+        # self.cv2_thread.finished.connect(self.close)
+        self.cv2_thread.update_status.connect(self.setCv2Status)
+        self.cv2_thread.update_frame.connect(self.setCv2Image)
+        self.cv2_thread.update_state.connect(self.setCv2State)
 
         self.cv2_btn.setDisabled(True)
 
     def cv2_btn_clicked(self):
-        # TODO ERROR!
-        self.create_cv2_thread()
-        self.cv2_thread.start()
+        self.cv2_thread.toggle()
 
     @Slot(QImage)
-    def setImage(self, image):
+    def setCv2Image(self, image):
         self.camera_label.setPixmap(QPixmap.fromImage(image))
 
     @Slot(dict)
-    def setState(self, state):
+    def setCv2State(self, state):
         self.state_label.setText(str(state["body"]))
-        self.cv2_btn.setDisabled(False)
+
+    @Slot(dict)
+    def setCv2Status(self, status):
+        if status["loading"]:
+            self.cv2_btn.setText("Loading camera...")
+            self.cv2_btn.setDisabled(True)
+        else:
+            self.cv2_btn.setDisabled(False)
+
+            if self.cv2_thread.status:
+                self.cv2_btn.setText("Stop camera")
+            else:
+                self.cv2_btn.setText("Start camera")
 
     def add_slider(self, slider, layout):
         key = slider["key"]
@@ -162,25 +201,22 @@ class Window(QMainWindow):
         elif type == "events":
             self.cv2_thread.body.events[key] = not not value
 
-    def add_controls_combobox(self, layout):
+    def add_controls_camera_ports(self, layout):
         controls_row = QFormLayout()
 
         controls_combobox = QComboBox()
         controls_combobox.setMaximumSize(150, 100)
-        controls_combobox.addItems(list(map(lambda i: i["name"], controls_list)))
-        controls_combobox.currentIndexChanged.connect(self.controls_combobox_change)
+        controls_combobox.addItems(list(map(str, self.camera_ports)))
+        controls_combobox.currentIndexChanged.connect(self.camera_ports_combobox_change)
 
-        controls_row.addRow("Control", controls_combobox)
+        controls_row.addRow("Select camera: ", controls_combobox)
         layout.addLayout(controls_row)
 
-    def controls_combobox_change(self, index):
-        events_config["command_key_mappings"] = controls_list[index]["mappings"]
-        new_events_config = events_config
-        if "events_config" in controls_list[index]:
-            new_events_config = controls_list[index]["events_config"]
-            print("new events config", new_events_config)
-        for k, v in new_events_config.items():
-            self.cv2_thread.body.events[k] = v
+    def camera_ports_combobox_change(self, index):
+        self.cv2_thread.camera_port = self.camera_ports[index]
+
+        if self.cv2_thread.status:
+            self.cv2_thread.toggle()
 
     def add_controls_mode_combobox(self, layout):
         controls_row = QFormLayout()
@@ -197,3 +233,7 @@ class Window(QMainWindow):
 
     def controls_mode_combobox_change(self, index):
         self.cv2_thread.body.mode = body_modes[index]
+
+    def event_config_window_saved(self, new_events_config):
+        for k, v in new_events_config.items():
+            self.cv2_thread.body.events[k] = v

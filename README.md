@@ -41,6 +41,8 @@ python app.py
 python -m nuitka app.py
 ```
 
+Run the exe file
+
 ## Configuration
 
 In `src/config.py` edit these objects:
@@ -62,6 +64,7 @@ Tilt head in left/right
 - Swing hands
   - Left: swing hand from left to right
   - Full swing: swing left hand from head to bottom
+- Raise both hands up
 - Hands crossed: Cross 2 hands in Wakanda style
 
 ### Legs
@@ -74,7 +77,7 @@ Tilt head in left/right
 - Squat
 - Left/right leg raised
 
-#### Driving mode
+#### Driving mode (in development)
 
 - Move 2 hands close to enable steering wheel, tilt left or right to control
 - Move 2 hands inside the green box to enable driving up control

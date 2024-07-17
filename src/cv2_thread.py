@@ -16,6 +16,7 @@ BG_COLOR = (192, 192, 192)  # gray
 
 
 class Cv2Thread(QThread):
+    update_status = Signal(dict)
     update_frame = Signal(QImage)
     update_state = Signal(dict)
 
@@ -27,13 +28,21 @@ class Cv2Thread(QThread):
         self.cap = True
         self.body = BodyState(body_config, events_config)
         self.mp_config = mp_config
+        self.camera_port = 0
+
+    def toggle(self):
+        self.status = not self.status
+        if self.status:
+            self.start()
 
     def run(self):
         print("run mediapipe", self.mp_config)
-        self.cap = cv2.VideoCapture(0)
+        self.update_status.emit(dict(loading=True))
+        self.cap = cv2.VideoCapture(self.camera_port)
 
         with mp_pose.Pose(**self.mp_config) as pose:
             while self.cap.isOpened() and self.status:
+                self.update_status.emit(dict(loading=False))
                 success, image = self.cap.read()
                 if not success:
                     print("Ignoring empty camera frame.")
@@ -104,4 +113,6 @@ class Cv2Thread(QThread):
                 if cv2.waitKey(5) & 0xFF == 27:
                     break
 
-        sys.exit(-1)
+        print("stop camera")
+        self.cap.release()
+        self.update_status.emit(dict(loading=False))
