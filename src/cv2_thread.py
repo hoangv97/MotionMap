@@ -5,8 +5,8 @@ import numpy as np
 from PySide6.QtCore import Qt, QThread, Signal
 from PySide6.QtGui import QImage
 import mediapipe as mp
-from body import BodyState
-from body.const import IMAGE_HEIGHT, IMAGE_WIDTH
+from .body import BodyState
+from .config import IMAGE_HEIGHT, IMAGE_WIDTH
 
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
@@ -16,6 +16,7 @@ BG_COLOR = (192, 192, 192)  # gray
 
 
 class Cv2Thread(QThread):
+    update_status = Signal(dict)
     update_frame = Signal(QImage)
     update_state = Signal(dict)
 
@@ -27,17 +28,28 @@ class Cv2Thread(QThread):
         self.cap = True
         self.body = BodyState(body_config, events_config)
         self.mp_config = mp_config
+        self.camera_port = 0
+
+    def toggle(self):
+        self.status = not self.status
+        if self.status:
+            self.start()
 
     def run(self):
         print("run mediapipe", self.mp_config)
-        self.cap = cv2.VideoCapture(0)
+        self.update_status.emit(dict(loading=True))
+        self.cap = cv2.VideoCapture(self.camera_port)
+
         with mp_pose.Pose(**self.mp_config) as pose:
             while self.cap.isOpened() and self.status:
+                self.update_status.emit(dict(loading=False))
                 success, image = self.cap.read()
                 if not success:
                     print("Ignoring empty camera frame.")
                     # If loading a video, use 'break' instead of 'continue'.
                     continue
+
+                timestamp = self.cap.get(cv2.CAP_PROP_POS_MSEC)
 
                 # To improve performance, optionally mark the image as not writeable to
                 # pass by reference.
@@ -84,7 +96,7 @@ class Cv2Thread(QThread):
                     landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style(),
                 )
 
-                self.body.calculate(image, results)
+                self.body.calculate(image, results, timestamp)
 
                 # Reading the image in RGB to display it
                 image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -101,4 +113,6 @@ class Cv2Thread(QThread):
                 if cv2.waitKey(5) & 0xFF == 27:
                     break
 
-        sys.exit(-1)
+        print("stop camera")
+        self.cap.release()
+        self.update_status.emit(dict(loading=False))

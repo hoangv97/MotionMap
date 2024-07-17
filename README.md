@@ -17,7 +17,7 @@ Racing game
 Create an virtual environment (optional)
 
 ```sh
-virtualenv venv
+python -m venv venv
 .\venv\Scripts\activate
 ```
 
@@ -30,12 +30,22 @@ pip install -r requirements.txt
 ## Run the application
 
 ```sh
-python window.py
+python app.py
 ```
+
+## Build
+
+### Windows
+
+```sh
+python -m nuitka app.py
+```
+
+Run the exe file
 
 ## Configuration
 
-In `window.py` edit these objects:
+In `src/config.py` edit these objects:
 
 - `mp_config`: Edit mediapipe pose configuration
 - `command_key_mappings_list`: Edit input controller
@@ -43,30 +53,21 @@ In `window.py` edit these objects:
 
 ## Supported body gestures
 
+See details in file `src/movements.py`
+
 ### Head
 
-`body/face.py`: Tilt head in left/right
+Tilt head in left/right
 
 ### Hands
 
-`body/arm.py`
-
 - Swing hands
   - Left: swing hand from left to right
-  - Left + hold: swing left hand with right hand up
-  - Right
-  - Right + hold
-- Hands crossed: Cross 2 hands in Wakanda style (if cross cmd mod is enabled, you can use this to toggle keyboard event)
-- Hold hands: Hold 2 hands or clap to enable
-
-#### Driving mode
-
-- Move 2 hands close to enable steering wheel, tilt left or right to control
-- Move 2 hands inside the green box to enable driving up control
+  - Full swing: swing left hand from head to bottom
+- Raise both hands up
+- Hands crossed: Cross 2 hands in Wakanda style
 
 ### Legs
-
-`body/leg.py`
 
 - Walking:
   - Up: walking with 2 hands down
@@ -74,6 +75,12 @@ In `window.py` edit these objects:
   - Right: walking with only right hand up 90 degree
   - Backwards: : walking with both hands up 90 degree
 - Squat
+- Left/right leg raised
+
+#### Driving mode (in development)
+
+- Move 2 hands close to enable steering wheel, tilt left or right to control
+- Move 2 hands inside the green box to enable driving up control
 
 ## Improvements
 

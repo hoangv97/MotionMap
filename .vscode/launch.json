@@ -6,9 +6,9 @@
   "configurations": [
     {
       "name": "Python: Run",
-      "type": "python",
+      "type": "debugpy",
       "request": "launch",
-      "program": "window.py",
+      "program": "app.py",
       "console": "integratedTerminal",
       "justMyCode": true
     }
