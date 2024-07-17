@@ -35,21 +35,21 @@ controls_list = [
     dict(
         name="Elden Ring",
         mappings=dict(
-            cross_hands="",
-            both_hands_up="",
-            left_swing="n",
-            left_heavy_swing="f",
-            right_swing=Key.space,
-            right_heavy_swing="x",
-            face_tilt_left="j",
-            face_tilt_right="l",
+            cross_hands="r",  # use item
+            both_hands_up="e",  # event action
+            left_swing="n",  # attack
+            left_heavy_swing="b",  # strong attack
+            right_swing="f",  # skill
+            right_heavy_swing="r",  # use item
+            face_tilt_left="l",  # move camera left
+            face_tilt_right="j",  # move camera right
             walk_both_hands_down="w",
             walk_left_hand_up="a",
             walk_right_hand_up="d",
             walk_both_hands_up="s",
-            squat="",
-            left_squat="",
-            right_squat="",
+            squat=Key.space,  # jump
+            left_squat=Key.shift,  # backstep, doge, dash
+            right_squat=Key.shift,
         ),
     ),
     dict(
