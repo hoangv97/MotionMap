@@ -106,8 +106,6 @@ class BodyState:
 
         self.mode = None
 
-        self.logs = ""
-
     def __setitem__(self, key, value):
         setattr(self, key, value)
 
@@ -137,11 +135,6 @@ class BodyState:
 
             if self.draw_angles:
                 self.run_draw_angles(image)
-
-            if self.show_coords:
-                self.logs = self.get_logs()
-            else:
-                self.logs = ""
 
         except Exception:
             print(traceback.format_exc())
@@ -273,24 +266,22 @@ class BodyState:
         logs = ""
         for name in LANDMARK_NAMES:
             landmark = self.state[name]
-
-            # logs += f"{name}: {log_landmark(landmark['world'])}\n"
+            logs += f"{name}: {log_landmark(landmark['world'])}\n"
 
         for angle in ANGLES:
             angle_value = self.state[angle_key_name(angle["name"])]
-
-            # logs += f"{angle_key_name(angle['name'])}: {log_angle(angle_value)}\n"
+            logs += f"{angle_key_name(angle['name'])}: {log_angle(angle_value)}\n"
 
         for slope in SLOPES:
             slope_value = self.state[slope_key_name(slope["name"])]
-
             logs += f"{slope_key_name(slope['name'])}: {log_angle(slope_value)}\n"
 
-        return logs
-
-    def __str__(self):
-
-        return f"""{self.logs}
+        return f"""{logs}
 Keyboard: {'YES' if self.events.keyboard_enabled else 'NO'}
 {self.events}
 """
+
+    def __str__(self):
+        if self.show_coords:
+            return self.get_logs()
+        return ""

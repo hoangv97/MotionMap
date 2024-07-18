@@ -1,9 +1,11 @@
 from pynput.keyboard import Key
 import mediapipe as mp
+import json
+import os
 
 BaseOptions = mp.tasks.BaseOptions
 
-window_title = "Body Controller"
+window_title = "MotionMap"
 # Window dimensions: x, y, width, height
 window_geometry = (100, 100, 660, 680)
 
@@ -14,73 +16,34 @@ DRIVING_UP_AREA = dict(x=250, y=290, width=140, height=140)
 
 auto_start_camera = False
 
+body_modes = [
+    "Action",
+    "Driving",
+]
+
 # Config for mediapipe pose solution
-mp_config = dict(
+default_mp_config = dict(
     min_detection_confidence=0.5,
     min_tracking_confidence=0.5,
     model_complexity=2,  # 0: Lite 1: Full 2: Heavy
     enable_segmentation=False,
 )
 
-body_modes = [
-    "Action",
-    "Driving",
-]
-
 # Config for body processor
-body_config = dict(
+default_body_config = dict(
     draw_angles=True,  # Show calculated angles on camera
     show_coords=True,  # Show body coordinates
 )
 
-controls_list = [
+default_controls_list = [
     dict(
         name="Empty",
-        mappings=dict(),
-    ),
-    dict(
-        name="Elden Ring",
-        mappings=dict(
-            cross_hands="r",  # use item
-            both_hands_up="e",  # event action
-            left_swing="n",  # attack
-            left_heavy_swing="b",  # strong attack
-            right_swing="f",  # skill
-            right_heavy_swing="r",  # use item
-            face_tilt_left="l",  # move camera left
-            face_tilt_right="j",  # move camera right
-            walk_both_hands_down="w",
-            walk_left_hand_up="a",
-            walk_right_hand_up="d",
-            walk_both_hands_up="s",
-            squat=Key.space,  # jump
-            left_leg_up=Key.shift,  # backstep, doge, dash
-            right_leg_up=Key.shift,
-        ),
-    ),
-    dict(
-        name="Zelda",
-        mappings=dict(
-            cross_hands="",
-            both_hands_up="",
-            left_swing="a",
-            left_heavy_swing="w",
-            right_swing="d",
-            right_heavy_swing="s",
-            face_tilt_left="j",
-            face_tilt_right="l",
-            walk_both_hands_down=Key.up,
-            walk_left_hand_up=Key.left,
-            walk_right_hand_up=Key.right,
-            walk_both_hands_up=Key.down,
-            squat="",
-            left_leg_up="",
-            right_leg_up="",
-        ),
+        command_key_mappings=dict(),
+        pressing_timer_interval=dict(),
     ),
 ]
 
-events_config = dict(
+default_events_config = dict(
     keyboard_enabled=False,  # toggle keyboard events
     command_key_mappings=dict(),
     pressing_timer_interval=dict(
@@ -90,62 +53,109 @@ events_config = dict(
     ),
 )
 
-inputs = [
-    dict(
-        name="Min detection confidence",
-        key="min_detection_confidence",
-        type="mp",
-        input="slider_percentage",
-        min=0,
-        max=100,
-        value=mp_config["min_detection_confidence"] * 100,
-        description="The minimum confidence score for the pose detection to be considered successful.",
-    ),
-    dict(
-        name="Min detection confidence",
-        key="min_tracking_confidence",
-        type="mp",
-        input="slider_percentage",
-        min=0,
-        max=100,
-        value=mp_config["min_tracking_confidence"] * 100,
-        description="The minimum confidence score for the pose tracking to be considered successful.	",
-    ),
-    dict(
-        name="Model complexity",
-        key="model_complexity",
-        type="mp",
-        input="slider",
-        min=0,
-        max=2,
-        value=mp_config["model_complexity"],
-        description="The model complexity to be used for pose detection: 0: Lite 1: Full 2: Heavy",
-    ),
-    dict(
-        name="Show segmentation",
-        key="enable_segmentation",
-        type="mp",
-        input="checkbox",
-        description="Whether showing a segmentation mask for the detected pose.",
-    ),
-    dict(
-        name="Show angles",
-        key="draw_angles",
-        type="body",
-        input="checkbox",
-        description="Show calculated angles on camera",
-    ),
-    dict(
-        name="Show body coords",
-        key="show_coords",
-        type="body",
-        input="checkbox",
-        description="Show body coordinates",
-    ),
-    dict(
-        name="Enable keyboard events",
-        key="keyboard_enabled",
-        type="events",
-        input="checkbox",
-    ),
-]
+config_file_path = "config.local.json"
+
+
+class AppConfig:
+
+    def __init__(self):
+        # create file if not exists
+        if not os.path.exists(config_file_path):
+            with open(config_file_path, "w") as f:
+                json.dump(
+                    {
+                        "mp_config": default_mp_config,
+                        "body_config": default_body_config,
+                        "events_config": default_events_config,
+                        "controls_list": default_controls_list,
+                    },
+                    f,
+                    indent=4,
+                )
+        # read config from file
+        with open(config_file_path, "r") as f:
+            config = json.load(f)
+
+            self.mp_config = config["mp_config"]
+            self.body_config = config["body_config"]
+            self.events_config = config["events_config"]
+            self.controls_list = config["controls_list"]
+
+    def save_config(self):
+        with open(config_file_path, "w") as f:
+            json.dump(
+                {
+                    "mp_config": self.mp_config,
+                    "body_config": self.body_config,
+                    "events_config": self.events_config,
+                    "controls_list": self.controls_list,
+                },
+                f,
+                indent=4,
+            )
+
+    def get_config_fields(self):
+        fields = [
+            dict(
+                name="Enable keyboard events",
+                key="keyboard_enabled",
+                type="events",
+                input="checkbox",
+            ),
+            dict(
+                name="Show body angles",
+                key="draw_angles",
+                type="body",
+                input="checkbox",
+                description="Show calculated angles on camera",
+            ),
+            dict(
+                name="Show logs",
+                key="show_coords",
+                type="body",
+                input="checkbox",
+                description="Show body coordinates and calculated angles",
+            ),
+            dict(
+                name="Advanced settings (require restart the camera to apply, hover for more info)",
+                input="label",
+            ),
+            dict(
+                name="Show segmentation mask (blur background)",
+                key="enable_segmentation",
+                type="mp",
+                input="checkbox",
+                description="Whether showing a segmentation mask for the detected pose.",
+            ),
+            dict(
+                name="Min detection confidence",
+                key="min_detection_confidence",
+                type="mp",
+                input="slider_percentage",
+                min=0,
+                max=100,
+                value=self.mp_config["min_detection_confidence"] * 100,
+                description="The minimum confidence score for the pose detection to be considered successful.",
+            ),
+            dict(
+                name="Min detection confidence",
+                key="min_tracking_confidence",
+                type="mp",
+                input="slider_percentage",
+                min=0,
+                max=100,
+                value=self.mp_config["min_tracking_confidence"] * 100,
+                description="The minimum confidence score for the pose tracking to be considered successful.	",
+            ),
+            dict(
+                name="Mediapipe Model complexity",
+                key="model_complexity",
+                type="mp",
+                input="slider",
+                min=0,
+                max=2,
+                value=self.mp_config["model_complexity"],
+                description="The model complexity to be used for pose detection: 0: Lite 1: Full 2: Heavy",
+            ),
+        ]
+        return fields

@@ -6,7 +6,7 @@ from PySide6.QtCore import Qt, QThread, Signal
 from PySide6.QtGui import QImage
 import mediapipe as mp
 from .body import BodyState
-from .config import IMAGE_HEIGHT, IMAGE_WIDTH
+from .config import IMAGE_HEIGHT, IMAGE_WIDTH, AppConfig
 
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
@@ -21,13 +21,15 @@ class Cv2Thread(QThread):
     update_state = Signal(dict)
 
     def __init__(
-        self, parent=None, mp_config=None, body_config=None, events_config=None
+        self,
+        parent,
+        app_config: AppConfig,
     ):
         QThread.__init__(self, parent)
         self.status = False
         self.cap = None
-        self.body = BodyState(body_config, events_config)
-        self.mp_config = mp_config
+        self.body = BodyState(app_config.body_config, app_config.events_config)
+        self.mp_config = app_config.mp_config
         self.camera_port = 0
 
     def toggle(self):
