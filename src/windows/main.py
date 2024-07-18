@@ -124,6 +124,13 @@ class MainWindow(QMainWindow):
             self.cv2_btn.setText("Start camera")
             self.cv2_btn.setDisabled(False)
 
+    # when window change position
+    def moveEvent(self, event):
+        self.events_config_window.move(
+            self.pos().x() + self.events_config_window.position_to_parent[0],
+            self.pos().y() + self.events_config_window.position_to_parent[1],
+        )
+
     def create_cv2_thread(self):
         self.cv2_thread = Cv2Thread(
             parent=self,

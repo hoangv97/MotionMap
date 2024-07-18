@@ -30,6 +30,8 @@ class EventsConfigWindow(QWidget):
 
     data_saved = Signal(dict)
 
+    position_to_parent = (50, 50)
+
     def __init__(
         self,
         parent_window: QMainWindow,
@@ -167,7 +169,9 @@ class EventsConfigWindow(QWidget):
     def show(self):
         # calculate new position for the window
         (x, y, _, _) = self.parent_window.geometry().getRect()
-        self.setGeometry(x + 50, y + 50, 400, 200)
+        self.setGeometry(
+            x + self.position_to_parent[0], y + self.position_to_parent[1], 400, 200
+        )
 
         super().show()
 
