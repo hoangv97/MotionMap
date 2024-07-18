@@ -4,11 +4,11 @@ Transform real-time body movements — including walking, squatting, hand swingi
 
 ## Demo
 
-Control a RPG game (Legend of Zelda)
+Control a RPG game (Legend of Zelda) (old version)
 
 [![Watch the video](https://img.youtube.com/vi/nMx1VlgjfBw/default.jpg)](https://youtu.be/nMx1VlgjfBw)
 
-Control a racing game
+Control a racing game (old version)
 
 [![Watch the video](https://img.youtube.com/vi/gAEEKOdsAxs/default.jpg)](https://youtu.be/gAEEKOdsAxs)
 
@@ -40,20 +40,14 @@ python app.py
 ### Windows
 
 ```sh
-python -m nuitka app.py
+python -m nuitka --disable-console --product-name MotionMap app.py
 ```
 
-Run the `app.exe` file in the root directory
+Run the build file in the root directory
 
-## Configuration
+- Windows: `app.exe`
 
-In `src/config.py` edit these objects:
-
-- `mp_config`: Edit mediapipe pose configuration
-- `control_list`: Edit input controller
-- `events_config`: Edit keyboard events configuration
-
-## Supported body gestures
+## Supported body movements
 
 See details in file `src/movements.py`
 
@@ -86,9 +80,11 @@ Tilt head in left/right
 
 #### FPS mode (in development)
 
-## Improvements
+## Roadmap
 
-- Edit mediapipe configuration in app
-- Allow edit input controller in app
-- Edit gesture detection thresholds
-- Edit pressing keyboard interval for each gesture
+- [ ] Support more movements: punch, kick
+- [ ] Support key combinations: Ctrl, Alt, Shift,...
+- [ ] Allow selecting movements for detection
+- [ ] Edit movements detection thresholds
+- [ ] Support more modes: driving, FPS games, controlling mouse
+- [ ] Support more OS: Mac, Linux

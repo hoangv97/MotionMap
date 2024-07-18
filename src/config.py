@@ -10,6 +10,8 @@ window_title = "MotionMap"
 # Window dimensions: x, y, width, height
 window_geometry = (100, 100, 660, 680)
 
+window_icon_path = "src/assets/icon.png"
+
 IMAGE_WIDTH = 640
 IMAGE_HEIGHT = 480
 
