@@ -88,3 +88,7 @@ Tilt head in left/right
 - [ ] Edit movements detection thresholds
 - [ ] Support more modes: driving, FPS games, controlling mouse
 - [ ] Support more OS: Mac, Linux
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
