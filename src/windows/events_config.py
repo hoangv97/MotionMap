@@ -13,7 +13,7 @@ from PySide6.QtWidgets import (
 )
 from copy import deepcopy
 
-from ..utils import keyboard_to_str, str_to_keyboard, keyboard_mappings
+from ..utils.keyboard import keyboard_to_str, str_to_keyboard, keyboard_mappings
 from ..config import AppConfig, default_events_config
 from ..movements import Movements
 
@@ -61,7 +61,7 @@ class EventsConfigWindow(QWidget):
             list(map(lambda i: i["name"], self.controls_list))
         )
         self.controls_combobox.currentIndexChanged.connect(
-            self.controls_combobox_change
+            lambda index: self.controls_combobox_change(index)
         )
 
         controls_row.addRow("Game: ", self.controls_combobox)
@@ -103,7 +103,7 @@ class EventsConfigWindow(QWidget):
             label.setToolTip(description)
 
             value_input = QLineEdit()
-            value_input.setObjectName(f"key_{i}")
+            value_input.setObjectName(f"key_{name}")
             value_input.setFixedWidth(100)
             value_input.textChanged.connect(
                 lambda text, name=name: self.command_key_mappings.update({name: text})
@@ -177,7 +177,7 @@ class EventsConfigWindow(QWidget):
     def set_values_for_keyboards(self):
         for i, movement in enumerate(self.get_movements_list()):
             name = movement["name"]
-            value = self.findChild(QLineEdit, f"key_{i}")
+            value = self.findChild(QLineEdit, f"key_{name}")
             value.setText(keyboard_to_str(self.command_key_mappings.get(name, "")))
 
         for k, v in self.pressing_timer_interval.items():
@@ -190,9 +190,9 @@ class EventsConfigWindow(QWidget):
             name = movement["name"]
             self.command_key_mappings[name] = new_mappings.get(name, "")
 
-        new_pressing_timer_interval = self.controls_list[index][
-            "pressing_timer_interval"
-        ]
+        new_pressing_timer_interval = self.controls_list[index].get(
+            "pressing_timer_interval", {}
+        )
         for k, v in new_pressing_timer_interval.items():
             self.pressing_timer_interval[k] = v
 
@@ -203,7 +203,7 @@ class EventsConfigWindow(QWidget):
         text, ok = QInputDialog.getText(self, "Save Game", "Name:")
         if ok and text:
             self.controls_list.append(
-                dict(name=text, mappings=self.command_key_mappings.copy())
+                dict(name=text, command_key_mappings=self.command_key_mappings.copy())
             )
             self.controls_combobox.addItem(text)
             self.controls_combobox.setCurrentIndex(self.controls_combobox.count() - 1)

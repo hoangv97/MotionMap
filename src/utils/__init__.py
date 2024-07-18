@@ -1,8 +1,7 @@
 import numpy as np
 from typing import Literal
 import cv2
-from pynput.keyboard import Key
-from .config import IMAGE_WIDTH, IMAGE_HEIGHT
+from ..config import IMAGE_WIDTH, IMAGE_HEIGHT
 
 
 # calculate angle in 3D space
@@ -123,34 +122,6 @@ def log_angle(angle):
     if not angle:
         return "None"
     return f"{angle:.1f}"
-
-
-keyboard_mappings = (
-    (Key.space, "space"),
-    (Key.shift, "shift"),
-    (Key.ctrl, "ctrl"),
-    (Key.tab, "tab"),
-    (Key.enter, "enter"),
-    (Key.esc, "esc"),
-    (Key.up, "up"),
-    (Key.down, "down"),
-    (Key.left, "left"),
-    (Key.right, "right"),
-)
-
-
-def keyboard_to_str(key):
-    for k, v in keyboard_mappings:
-        if key == k:
-            return v
-    return str(key)
-
-
-def str_to_keyboard(value):
-    for k, v in keyboard_mappings:
-        if value == v:
-            return k
-    return value
 
 
 def list_camera_ports():
