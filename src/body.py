@@ -57,6 +57,14 @@ ANGLES = [
     dict(
         name="RIGHT_SHOULDER", landmarks=("RIGHT_ELBOW", "RIGHT_SHOULDER", "RIGHT_HIP")
     ),
+    dict(
+        name="LEFT_ELBOW_SHOULDERS",
+        landmarks=("LEFT_ELBOW", "LEFT_SHOULDER", "RIGHT_SHOULDER"),
+    ),
+    dict(
+        name="RIGHT_ELBOW_SHOULDERS",
+        landmarks=("RIGHT_ELBOW", "RIGHT_SHOULDER", "LEFT_SHOULDER"),
+    ),
     dict(name="LEFT_ELBOW", landmarks=("LEFT_SHOULDER", "LEFT_ELBOW", "LEFT_WRIST")),
     dict(
         name="RIGHT_ELBOW", landmarks=("RIGHT_SHOULDER", "RIGHT_ELBOW", "RIGHT_WRIST")
@@ -68,12 +76,10 @@ ANGLES = [
     dict(
         name="LEFT_HIP_KNEE",
         landmarks=("RIGHT_HIP", "LEFT_HIP", "LEFT_KNEE"),
-        drawable=False,
     ),
     dict(
         name="RIGHT_HIP_KNEE",
         landmarks=("LEFT_HIP", "RIGHT_HIP", "RIGHT_KNEE"),
-        drawable=False,
     ),
 ]
 
@@ -93,7 +99,6 @@ def slope_key_name(name):
 class BodyState:
     def __init__(self, body_config, events_config):
         self.draw_angles = body_config["draw_angles"]
-        self.show_coords = body_config["show_coords"]
 
         self.movements = Movements(movements_config=deepcopy(default_movements_config))
         self.events = Events(**events_config)
@@ -203,9 +208,15 @@ class BodyState:
             self.state[slope_key_name(name)] = calculate_slope(a, b)
 
     def detect_movement(self, timestamp):
+        # ignore the movements by checking command key mappings
         ignored_movement_names = []
+        for command_name, command_value in self.events.command_key_mappings.items():
+            if not command_value.get("active", True):
+                ignored_movement_names.append(command_name)
 
-        for movement in self.movements.get_current_list():
+        movements = self.movements.get_current_list()
+
+        for movement in movements:
             name = movement["name"]
             movement_type = movement["type"]
             checkpoints = movement["checkpoints"]
@@ -221,11 +232,15 @@ class BodyState:
                 if condition(self.state):
                     if not state:
                         checkpoint["state"] = True
-                        if active_duration:
-                            checkpoint["active_time"] = timestamp
+                        checkpoint["active_time"] = timestamp
 
-                        if i == len(checkpoints) - 1:
-                            # if all checkpoints are active, add the movement to the events
+                        # if all checkpoints are passed, add the movement to the pipeline
+                        if i == len(checkpoints) - 1 and all(
+                            [
+                                checkpoint.get("state", False)
+                                for checkpoint in checkpoints
+                            ]
+                        ):
                             self.events.add(
                                 command_name=name,
                                 command_type=movement_type,
@@ -237,13 +252,15 @@ class BodyState:
                             if ignored_movements:
                                 ignored_movement_names += ignored_movements["group"]
 
-                elif timestamp - checkpoint.get("active_time", 0) > active_duration:
+                if (
+                    not condition(self.state)
+                    and timestamp - checkpoint.get("active_time", 0) > active_duration
+                ):
                     checkpoint["state"] = False
-                    break
 
     def run_draw_angles(self, image):
         for angle in ANGLES:
-            if "drawable" in angle and not angle["drawable"]:
+            if angle["name"] not in self.state:
                 continue
 
             angle_value = self.state[angle_key_name(angle["name"])]
@@ -266,7 +283,7 @@ class BodyState:
         logs = ""
         for name in LANDMARK_NAMES:
             landmark = self.state[name]
-            logs += f"{name}: {log_landmark(landmark['world'])}\n"
+            logs += f"{name}: {log_landmark(landmark['pose'])}\n"
 
         for angle in ANGLES:
             angle_value = self.state[angle_key_name(angle["name"])]
@@ -282,6 +299,4 @@ Keyboard: {'YES' if self.events.keyboard_enabled else 'NO'}
 """
 
     def __str__(self):
-        if self.show_coords:
-            return self.get_logs()
-        return ""
+        return self.get_logs()

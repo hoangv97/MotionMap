@@ -10,10 +10,12 @@ from PySide6.QtWidgets import (
     QMainWindow,
     QHBoxLayout,
     QInputDialog,
+    QCheckBox,
 )
 from copy import deepcopy
+from typing import Any
 
-from ..utils.keyboard import keyboard_to_str, str_to_keyboard, keyboard_mappings
+from ..utils.keyboard import keyboard_special_key_names
 from ..config import AppConfig, default_events_config
 from ..movements import Movements
 
@@ -52,7 +54,7 @@ class EventsConfigWindow(QWidget):
         ]
         self.controls_list = self.app_config.controls_list
 
-        self.setWindowTitle("Key Bindings Configuration")
+        self.setWindowTitle("Key Configuration")
 
         # games list
         controls_row = QFormLayout()
@@ -86,32 +88,67 @@ class EventsConfigWindow(QWidget):
         key_mappings_label.setStyleSheet("font-weight: bold;")
         key_mappings_label.setToolTip(f"Key mappings for each movement type.")
 
-        key_modifier_names = ", ".join(list(map(lambda k: k[1], keyboard_mappings)))
         key_mappings_sub_label = QLabel(
-            f"Enter a key or a modifier key name (e.g: {key_modifier_names})"
+            f"Enter a key or select a modifier key from the list. \nNote: Some movements may not be detected if they are both active (see each movement for more details). Consider turn off the movements that are not used."
         )
         key_mappings_sub_label.setMaximumWidth(300)
         key_mappings_sub_label.setWordWrap(True)
 
+        self.modifiers_combobox_items = [""] + keyboard_special_key_names
+
         # form layout
-        form_layout = QFormLayout()
+        form_layout = QVBoxLayout()
         for i, movement in enumerate(self.get_movements_list()):
             name = movement["name"]
             movement_type = movement["type"]
             description = movement["description"]
 
+            active_checkbox = QCheckBox()
+            active_checkbox.setObjectName(f"key_active_{name}")
+            active_checkbox.setCheckState(
+                Qt.Checked
+                if self.command_key_mappings.get(name, {}).get("active", True)
+                else Qt.Unchecked
+            )
+            active_checkbox.stateChanged.connect(
+                lambda value, name=name: self.command_key_mapping_change(
+                    name, field="active", value=not not value
+                )
+            )
+
             label_text = f"{normalize_text(name)} ({normalize_text(movement_type)}): "
             label = QLabel(label_text)
             label.setToolTip(description)
+            label.setFixedWidth(200)
 
             value_input = QLineEdit()
             value_input.setObjectName(f"key_{name}")
             value_input.setFixedWidth(100)
+            value_input.setMaxLength(1)
             value_input.textChanged.connect(
-                lambda text, name=name: self.command_key_mappings.update({name: text})
+                lambda text, name=name: self.command_key_mapping_change(
+                    name, field="key", value=text
+                )
             )
 
-            form_layout.addRow(label, value_input)
+            modifiers_combobox = QComboBox()
+            modifiers_combobox.setObjectName(f"key_modifiers_{name}")
+            modifiers_combobox.setFixedWidth(100)
+            modifiers_combobox.addItems(self.modifiers_combobox_items)
+            modifiers_combobox.currentTextChanged.connect(
+                lambda text, name=name: self.command_key_mapping_change(
+                    name, field="modifier", value=text
+                )
+            )
+
+            field_layout = QHBoxLayout()
+            field_layout.setAlignment(Qt.AlignLeft)
+            field_layout.addWidget(active_checkbox)
+            field_layout.addWidget(label)
+            field_layout.addWidget(value_input)
+            field_layout.addWidget(modifiers_combobox)
+
+            form_layout.addLayout(field_layout)
 
         pressing_timer_interval_label = QLabel("Key Pressing Interval (seconds)")
         pressing_timer_interval_label.setStyleSheet("font-weight: bold;")
@@ -166,33 +203,64 @@ class EventsConfigWindow(QWidget):
 
         self.set_values_for_keyboards()
 
-    def show(self):
-        # calculate new position for the window
-        (x, y, _, _) = self.parent_window.geometry().getRect()
-        self.setGeometry(
-            x + self.position_to_parent[0], y + self.position_to_parent[1], 400, 200
-        )
+    def toggle(self):
+        if self.isVisible():
+            self.hide()
+        else:
+            # calculate new position for the window
+            (x, y, _, _) = self.parent_window.geometry().getRect()
+            self.setGeometry(
+                x + self.position_to_parent[0], y + self.position_to_parent[1], 400, 200
+            )
 
-        super().show()
+            super().show()
+
+    def move_by_parent(self, parent_x, parent_y):
+        self.move(
+            parent_x + self.position_to_parent[0],
+            parent_y + self.position_to_parent[1],
+        )
 
     def get_movements_list(self):
         return self.movements.get_current_list()
 
     def set_values_for_keyboards(self):
-        for i, movement in enumerate(self.get_movements_list()):
+        movements = self.get_movements_list()
+        for i, movement in enumerate(movements):
             name = movement["name"]
-            value = self.findChild(QLineEdit, f"key_{name}")
-            value.setText(keyboard_to_str(self.command_key_mappings.get(name, "")))
+
+            active_field: QCheckBox = self.findChild(QCheckBox, f"key_active_{name}")
+            active_field.setCheckState(
+                Qt.Checked
+                if self.command_key_mappings.get(name, {}).get("active", True)
+                else Qt.Unchecked
+            )
+
+            key_field = self.findChild(QLineEdit, f"key_{name}")
+            key_field.setText(self.command_key_mappings.get(name, {}).get("key", ""))
+
+            modifier_field: QComboBox = self.findChild(
+                QComboBox, f"key_modifiers_{name}"
+            )
+            modifier_value = self.command_key_mappings.get(name, {}).get("modifier", "")
+            modifier_field.setCurrentIndex(
+                0
+                if not modifier_value
+                else self.modifiers_combobox_items.index(modifier_value)
+            )
 
         for k, v in self.pressing_timer_interval.items():
             value = self.findChild(QLineEdit, f"interval_{k}")
             value.setText(str(v))
 
+    def command_key_mapping_change(self, name: str, field: str, value: Any):
+        self.command_key_mappings[name][field] = value
+
     def controls_combobox_change(self, index):
         new_mappings = self.controls_list[index]["command_key_mappings"]
         for i, movement in enumerate(self.get_movements_list()):
             name = movement["name"]
-            self.command_key_mappings[name] = new_mappings.get(name, "")
+            self.command_key_mappings[name] = new_mappings.get(name, {}).copy()
 
         new_pressing_timer_interval = self.controls_list[index].get(
             "pressing_timer_interval", {}
@@ -235,12 +303,9 @@ class EventsConfigWindow(QWidget):
             self.app_config.save_config()
 
     def save_button_clicked(self):
-        new_command_key_mappings = {}
-        for k, v in self.command_key_mappings.items():
-            new_command_key_mappings[k] = str_to_keyboard(v)
         self.data_saved.emit(
             dict(
-                command_key_mappings=new_command_key_mappings,
+                command_key_mappings=self.command_key_mappings,
                 pressing_timer_interval=self.pressing_timer_interval,
             )
         )

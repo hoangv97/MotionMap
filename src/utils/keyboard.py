@@ -13,6 +13,8 @@ keyboard_mappings = (
     (Key.right, "right"),
 )
 
+keyboard_special_key_names = [v for k, v in keyboard_mappings]
+
 
 def keyboard_to_str(key):
     for k, v in keyboard_mappings:

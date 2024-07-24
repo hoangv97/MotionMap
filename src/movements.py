@@ -1,24 +1,37 @@
 from typing import Literal
-from .utils import (
-    compare_nums,
-)
+from .utils import compare_nums, in_range
 
 default_movements_config = dict(
-    DEFAULT_CHECKPOINT_ACTIVE_DURATION=500,  # ms; if active, keep active for this duration, all checkpoints except the last one must have this field to keep track of states
+    # if active, keep active for this duration, all checkpoints except the last one must have this field to keep track of states; used to track movements with long duration
+    DEFAULT_CHECKPOINT_ACTIVE_DURATION=1000,  # ms
     ELBOW_CROSS_MAX_ANGLE=100,  # cross_hands
     SQUAT_KNEE_MAX_ANGLE=120,  # squat
     LEG_UP_KNEE_MAX_ANGLE=90,  # left_leg_up, right_leg_up
+    LEG_KICK_KNEE_MAX_ANGLE=100,  # left_kick
     WALK_KNEE_MAX_ANGLE=130,  # walk
     FACE_TILT_SLOPE_MAX_ANGLE=35,  # face_tilt
     STRAIGHT_ELBOW_MAX_ANGLE=140,  # straight arm
     UP_SHOULDERS_MAX_ANGLE=45,  # up arm
+    PUNCH_ELBOW_MIN_ANGLE=130,  # punch
+    PUNCH_SHOULDER_MIN_ANGLE=60,  # punch
+    PUNCH_SHOULDER_MAX_ANGLE=90,  # punch
+    PUNCH_ELBOW_SHOULDERS_MAX_ANGLE=95,  # punch
 )
 
 
 def is_walking(state, walk_knee_max_angle: int):
-    return compare_nums(
-        state["ANGLE_LEFT_KNEE"], walk_knee_max_angle, "lt"
-    ) or compare_nums(state["ANGLE_RIGHT_KNEE"], walk_knee_max_angle, "lt")
+    return (
+        (
+            compare_nums(state["ANGLE_LEFT_KNEE"], walk_knee_max_angle, "lt")
+            or compare_nums(state["ANGLE_RIGHT_KNEE"], walk_knee_max_angle, "lt")
+        )
+        and compare_nums(
+            state["LEFT_KNEE"]["pose"][1], state["LEFT_HIP"]["pose"][1], "gt"
+        )
+        and compare_nums(
+            state["RIGHT_KNEE"]["pose"][1], state["RIGHT_HIP"]["pose"][1], "gt"
+        )
+    )
 
 
 def is_arm_straight(
@@ -49,6 +62,7 @@ class Movements:
 
     def get_current_list(self):
         movements = [
+            # arm movements
             {
                 "name": "both_hands_up",
                 "description": "Raise both hands up, higher than the head.",
@@ -110,7 +124,7 @@ class Movements:
                     {
                         "condition": lambda state: compare_nums(
                             state["LEFT_WRIST"]["pose"][0],
-                            state["NOSE"]["pose"][0],
+                            state["RIGHT_SHOULDER"]["pose"][0],
                             "lt",
                         ),
                     },
@@ -134,7 +148,7 @@ class Movements:
                     {
                         "condition": lambda state: compare_nums(
                             state["RIGHT_WRIST"]["pose"][0],
-                            state["NOSE"]["pose"][0],
+                            state["LEFT_SHOULDER"]["pose"][0],
                             "gt",
                         ),
                     },
@@ -148,7 +162,7 @@ class Movements:
                     {
                         "condition": lambda state: compare_nums(
                             state["LEFT_WRIST"]["pose"][0],
-                            state["NOSE"]["pose"][0],
+                            state["RIGHT_SHOULDER"]["pose"][0],
                             "lt",
                         ),
                     },
@@ -162,12 +176,71 @@ class Movements:
                     {
                         "condition": lambda state: compare_nums(
                             state["RIGHT_WRIST"]["pose"][0],
-                            state["NOSE"]["pose"][0],
+                            state["LEFT_SHOULDER"]["pose"][0],
                             "gt",
                         ),
                     },
                 ],
             },
+            {
+                "name": "left_punch",
+                "description": "Punch with the left hand.",
+                "type": "click",
+                "checkpoints": [
+                    {
+                        "condition": lambda state: compare_nums(
+                            state["LEFT_WRIST"]["pose"][1],
+                            state["NOSE"]["pose"][1],
+                            "gt",
+                        )
+                        and compare_nums(
+                            state["ANGLE_LEFT_ELBOW"],
+                            self.movements_config["PUNCH_ELBOW_MIN_ANGLE"],
+                            "gt",
+                        )
+                        and in_range(
+                            state["ANGLE_LEFT_SHOULDER"],
+                            self.movements_config["PUNCH_SHOULDER_MIN_ANGLE"],
+                            self.movements_config["PUNCH_SHOULDER_MAX_ANGLE"],
+                        )
+                        and compare_nums(
+                            state["ANGLE_LEFT_ELBOW_SHOULDERS"],
+                            self.movements_config["PUNCH_ELBOW_SHOULDERS_MAX_ANGLE"],
+                            "lt",
+                        ),
+                    },
+                ],
+            },
+            {
+                "name": "right_punch",
+                "description": "Punch with the right hand.",
+                "type": "click",
+                "checkpoints": [
+                    {
+                        "condition": lambda state: compare_nums(
+                            state["RIGHT_WRIST"]["pose"][1],
+                            state["NOSE"]["pose"][1],
+                            "gt",
+                        )
+                        and compare_nums(
+                            state["ANGLE_RIGHT_ELBOW"],
+                            self.movements_config["PUNCH_ELBOW_MIN_ANGLE"],
+                            "gt",
+                        )
+                        and in_range(
+                            state["ANGLE_RIGHT_SHOULDER"],
+                            self.movements_config["PUNCH_SHOULDER_MIN_ANGLE"],
+                            self.movements_config["PUNCH_SHOULDER_MAX_ANGLE"],
+                        )
+                        and compare_nums(
+                            state["ANGLE_RIGHT_ELBOW_SHOULDERS"],
+                            self.movements_config["PUNCH_ELBOW_SHOULDERS_MAX_ANGLE"],
+                            "lt",
+                        )
+                    },
+                ],
+            },
+            # leg movements
             {
                 "name": "squat",
                 "description": "Squat down, knees should not pass the toes.",
@@ -231,6 +304,44 @@ class Movements:
                             state["ANGLE_RIGHT_KNEE"],
                             self.movements_config["LEG_UP_KNEE_MAX_ANGLE"],
                             "lt",
+                        ),
+                    },
+                ],
+            },
+            {
+                "name": "left_kick",
+                "description": "Kick with the left leg. Turn off left leg up to detect.",
+                "type": "click",
+                "checkpoints": [
+                    {
+                        "condition": lambda state: compare_nums(
+                            state["LEFT_KNEE"]["pose"][1],
+                            state["LEFT_HIP"]["pose"][1],
+                            "lt",
+                        )
+                        and compare_nums(
+                            state["ANGLE_LEFT_KNEE"],
+                            self.movements_config["LEG_KICK_KNEE_MAX_ANGLE"],
+                            "gt",
+                        ),
+                    },
+                ],
+            },
+            {
+                "name": "right_kick",
+                "description": "Kick with the right leg. Turn off right leg up to detect.",
+                "type": "click",
+                "checkpoints": [
+                    {
+                        "condition": lambda state: compare_nums(
+                            state["RIGHT_KNEE"]["pose"][1],
+                            state["RIGHT_HIP"]["pose"][1],
+                            "lt",
+                        )
+                        and compare_nums(
+                            state["ANGLE_RIGHT_KNEE"],
+                            self.movements_config["LEG_KICK_KNEE_MAX_ANGLE"],
+                            "gt",
                         ),
                     },
                 ],
@@ -383,18 +494,22 @@ SEPARATED_MOVEMENTS_NAMES = (
         "group": (
             "both_hands_up",
             "cross_hands",
+            "left_punch",
+            "right_punch",
             "left_heavy_swing",
             "right_heavy_swing",
             "left_swing",
             "right_swing",
         ),
-        "duration": 500,  # ms, ignore if the same movement is detected within 500ms
+        "duration": 800,  # ms, ignore if the same movement is detected within 500ms
     },
     {
         "group": (
             "squat",
             "left_leg_up",
             "right_leg_up",
+            "left_kick",
+            "right_kick",
             "walk_both_hands_up",
             "walk_left_hand_up",
             "walk_right_hand_up",

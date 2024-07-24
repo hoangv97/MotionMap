@@ -1,8 +1,6 @@
-from pynput.keyboard import Key
 import mediapipe as mp
 import json
 import os
-from .utils.keyboard import keyboard_to_str, str_to_keyboard
 
 BaseOptions = mp.tasks.BaseOptions
 
@@ -35,7 +33,6 @@ default_mp_config = dict(
 # Config for body processor
 default_body_config = dict(
     draw_angles=True,  # Show calculated angles on camera
-    show_coords=True,  # Show body coordinates
 )
 
 default_pressing_timer_interval = dict(
@@ -46,12 +43,62 @@ default_pressing_timer_interval = dict(
 
 default_controls_list = [
     dict(
-        name="Empty",
+        name="Default",
         command_key_mappings=dict(
-            walk_both_hands_down=Key.up,
-            walk_both_hands_up=Key.down,
-            walk_left_hand_up=Key.left,
-            walk_right_hand_up=Key.right,
+            both_hands_up={
+                "key": "",
+            },
+            cross_hands={
+                "key": "",
+            },
+            left_punch={
+                "key": "",
+            },
+            right_punch={
+                "key": "",
+            },
+            left_heavy_swing={
+                "key": "",
+            },
+            right_heavy_swing={
+                "key": "",
+            },
+            left_swing={
+                "key": "",
+            },
+            right_swing={
+                "key": "",
+            },
+            left_leg_up={
+                "key": "",
+            },
+            right_leg_up={
+                "key": "",
+            },
+            left_kick={
+                "key": "",
+            },
+            right_kick={
+                "key": "",
+            },
+            walk_both_hands_down={
+                "modifier": "up",
+            },
+            walk_both_hands_up={
+                "modifier": "down",
+            },
+            walk_left_hand_up={
+                "modifier": "left",
+            },
+            walk_right_hand_up={
+                "modifier": "right",
+            },
+            face_tilt_left={
+                "key": "",
+            },
+            face_tilt_right={
+                "key": "",
+            },
         ),
         pressing_timer_interval=default_pressing_timer_interval,
     ),
@@ -59,23 +106,11 @@ default_controls_list = [
 
 default_events_config = dict(
     keyboard_enabled=False,  # toggle keyboard events
-    command_key_mappings=dict(),
+    command_key_mappings=default_controls_list[0]["command_key_mappings"],
     pressing_timer_interval=default_pressing_timer_interval,
 )
 
 config_file_path = "config.local.json"
-
-
-def parse_command_key_mappings_from_str_to_keyboard(command_key_mappings: dict):
-    for movement in command_key_mappings:
-        command_key_mappings[movement] = str_to_keyboard(command_key_mappings[movement])
-    return command_key_mappings
-
-
-def parse_command_key_mappings_from_keyboard_to_str(command_key_mappings: dict):
-    for movement in command_key_mappings:
-        command_key_mappings[movement] = keyboard_to_str(command_key_mappings[movement])
-    return command_key_mappings
 
 
 class AppConfig:
@@ -89,8 +124,8 @@ class AppConfig:
         # create file if not exists
         if not os.path.exists(config_file_path):
             self.save_config()
-        else:
-            self.load_config()
+
+        self.load_config()
 
     def load_config(self):
         # read config from file
@@ -102,41 +137,15 @@ class AppConfig:
             self.events_config = config["events_config"]
             self.controls_list = config["controls_list"]
 
-            self.events_config["command_key_mappings"] = (
-                parse_command_key_mappings_from_str_to_keyboard(
-                    self.events_config["command_key_mappings"]
-                )
-            )
-            for controls in self.controls_list:
-                controls["command_key_mappings"] = (
-                    parse_command_key_mappings_from_str_to_keyboard(
-                        controls["command_key_mappings"]
-                    )
-                )
-
     def save_config(self):
+        print("save config")
         with open(config_file_path, "w") as f:
-            events_config = self.events_config.copy()
-            events_config["command_key_mappings"] = (
-                parse_command_key_mappings_from_keyboard_to_str(
-                    events_config["command_key_mappings"]
-                )
-            )
-
-            controls_list = self.controls_list.copy()
-            for controls in controls_list:
-                controls["command_key_mappings"] = (
-                    parse_command_key_mappings_from_keyboard_to_str(
-                        controls["command_key_mappings"]
-                    )
-                )
-
             json.dump(
                 {
                     "mp_config": self.mp_config,
                     "body_config": self.body_config,
-                    "events_config": events_config,
-                    "controls_list": controls_list,
+                    "events_config": self.events_config,
+                    "controls_list": self.controls_list,
                 },
                 f,
                 indent=4,
@@ -156,13 +165,6 @@ class AppConfig:
                 type="body",
                 input="checkbox",
                 description="Show calculated angles on camera",
-            ),
-            dict(
-                name="Show logs",
-                key="show_coords",
-                type="body",
-                input="checkbox",
-                description="Show body coordinates and calculated angles",
             ),
             dict(
                 name="Advanced settings (require restart the camera to apply, hover for more info)",

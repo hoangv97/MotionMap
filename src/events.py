@@ -35,7 +35,7 @@ class Events:
                 if event_name in ignored_movements["group"] and timestamp - event[
                     "timestamp"
                 ] < ignored_movements.get("duration", 0):
-                    print("ignore", command_name, command_type)
+                    # print("ignore", command_name, command_type)
                     return
 
         # only keeps latest events in history from 10 seconds

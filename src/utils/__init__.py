@@ -96,7 +96,9 @@ def compare_nums(
         return a <= b
 
 
-def in_range(a: float, min: float, max: float):
+def in_range(a, min: float, max: float):
+    if a is None:
+        return False
     return a > min and a < max
 
 

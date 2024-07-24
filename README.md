@@ -4,7 +4,7 @@ Transform real-time body movements — including walking, squatting, hand swingi
 
 ## Demo
 
-Control a RPG game (Legend of Zelda) (old version)
+Control an RPG game (Legend of Zelda) (old version)
 
 [![Watch the video](https://img.youtube.com/vi/nMx1VlgjfBw/default.jpg)](https://youtu.be/nMx1VlgjfBw)
 
@@ -49,6 +49,10 @@ Run the build file in the root directory
 
 ## Supported body movements
 
+Movements are based on Mediapipe Pose model. The model detects 33 key points of the body, including eyes, ears, nose, shoulders, elbows, wrists, hips, knees, and ankles. From these key points, we can detect the movements by calculating the angles between the points, the distance between the points, and the position of the points.
+
+![Body](/src/assets/body.png)
+
 See details in file `src/movements.py`
 
 ### Head
@@ -73,21 +77,20 @@ Tilt head in left/right
 - Squat
 - Left/right leg raised
 
-#### Driving mode (in development)
+### Driving mode (in development)
 
 - Move 2 hands close to enable steering wheel, tilt left or right to control
 - Move 2 hands inside the green box to enable driving up control
 
-#### FPS mode (in development)
+### FPS mode (in development)
 
 ## Roadmap
 
-- [ ] Support more movements: punch, kick
-- [ ] Support key combinations: Ctrl, Alt, Shift,...
-- [ ] Allow selecting movements for detection
-- [ ] Edit movements detection thresholds
 - [ ] Support more modes: driving, FPS games, controlling mouse
+- [ ] Support 2 players mode
 - [ ] Support more OS: Mac, Linux
+- [ ] Edit movements detection thresholds (advanced mode)
+- [ ] Fix the mirror camera issue
 
 ## Contributing
 

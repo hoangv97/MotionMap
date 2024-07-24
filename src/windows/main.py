@@ -27,6 +27,7 @@ from ..config import (
 )
 from ..utils import list_camera_ports
 from .events_config import EventsConfigWindow
+from .logs import LogsWindow
 
 
 class MainWindow(QMainWindow):
@@ -49,6 +50,11 @@ class MainWindow(QMainWindow):
         )
         self.events_config_window.data_saved.connect(self.event_config_window_saved)
 
+        # Create logs window
+        self.logs_window = LogsWindow(
+            parent_window=self,
+        )
+
         # Title and dimensions
         self.setWindowTitle(window_title)
         self.setGeometry(*window_geometry)
@@ -57,7 +63,7 @@ class MainWindow(QMainWindow):
         self.camera_label = QLabel()
         self.camera_label.setFixedSize(IMAGE_WIDTH, IMAGE_HEIGHT)
 
-        log_layout = QVBoxLayout()
+        config_layout = QVBoxLayout()
 
         # Create a button to start/stop the camera
         self.cv2_btn = QPushButton()
@@ -66,12 +72,17 @@ class MainWindow(QMainWindow):
         self.cv2_btn.clicked.connect(self.cv2_btn_clicked)
 
         # Add camera ports combobox
-        self.add_controls_camera_ports(log_layout)
+        self.add_controls_camera_ports(config_layout)
 
         # Add events config window button
-        events_config_window_button = QPushButton("Key bindings configuration")
-        events_config_window_button.clicked.connect(self.events_config_window.show)
+        events_config_window_button = QPushButton("Key Configuration")
         events_config_window_button.setFixedHeight(30)
+        events_config_window_button.clicked.connect(self.events_config_window.toggle)
+
+        # Add logs window button
+        logs_window_button = QPushButton("Show logs")
+        logs_window_button.setFixedHeight(30)
+        logs_window_button.clicked.connect(self.logs_window.toggle)
 
         # Add inputs
         for input in self.app_config.get_config_fields():
@@ -79,25 +90,15 @@ class MainWindow(QMainWindow):
                 continue
             input_type = input["input"]
             if input_type == "checkbox":
-                self.add_checkbox(input, log_layout)
+                self.add_checkbox(input, config_layout)
             elif "slider" in input_type:
-                self.add_slider(input, log_layout)
+                self.add_slider(input, config_layout)
             elif input_type == "label":
                 label = QLabel(input["name"])
                 label.setStyleSheet("font-weight: bold;")
-                log_layout.addWidget(label)
+                config_layout.addWidget(label)
 
         # self.add_controls_mode_combobox(log_layout)
-
-        # Add state label
-        state_title_label = QLabel("Logs:")
-        state_title_label.setStyleSheet("font-weight: bold;")
-
-        self.state_label = QLabel(self)
-        self.state_label.setWordWrap(True)
-
-        log_layout.addWidget(state_title_label)
-        log_layout.addWidget(self.state_label)
 
         # Left layout
         left_layout = QVBoxLayout()
@@ -105,12 +106,13 @@ class MainWindow(QMainWindow):
         left_layout_buttons = QHBoxLayout()
         left_layout_buttons.addWidget(self.cv2_btn)
         left_layout_buttons.addWidget(events_config_window_button)
+        left_layout_buttons.addWidget(logs_window_button)
         left_layout.addLayout(left_layout_buttons)
 
         # Main layout
         main_layout = QVBoxLayout()
         main_layout.addLayout(left_layout)
-        main_layout.addLayout(log_layout)
+        main_layout.addLayout(config_layout)
 
         # Central widget
         main_widget = QWidget(self)
@@ -126,9 +128,13 @@ class MainWindow(QMainWindow):
 
     # when window change position
     def moveEvent(self, event):
-        self.events_config_window.move(
-            self.pos().x() + self.events_config_window.position_to_parent[0],
-            self.pos().y() + self.events_config_window.position_to_parent[1],
+        self.events_config_window.move_by_parent(
+            self.pos().x(),
+            self.pos().y(),
+        )
+        self.logs_window.move_by_parent(
+            self.pos().x(),
+            self.pos().y(),
         )
 
     def create_cv2_thread(self):
@@ -150,7 +156,7 @@ class MainWindow(QMainWindow):
 
     @Slot(dict)
     def setCv2State(self, state: dict):
-        self.state_label.setText(str(state["body"]))
+        self.logs_window.state_label.setText(str(state["body"]))
 
     @Slot(dict)
     def setCv2Status(self, status: dict):
@@ -245,7 +251,7 @@ class MainWindow(QMainWindow):
         controls_row = QFormLayout()
 
         controls_combobox = QComboBox()
-        controls_combobox.setMaximumSize(150, 100)
+        controls_combobox.setFixedWidth(100)
         controls_combobox.addItems(list(map(str, self.camera_ports)))
         controls_combobox.currentIndexChanged.connect(self.camera_ports_combobox_change)
 
