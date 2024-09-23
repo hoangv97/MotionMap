@@ -106,6 +106,7 @@ class BodyState:
         self.state = {
             # "NOSE": { pose: (x, y, z, v), world: (x, y, z, v), visibility: bool },
             # "ANGLE_NAME": angle,
+            # "SLOPE_NAME": slope,
         }
         self.init_state()
 
